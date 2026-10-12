@@ -25,9 +25,51 @@ const snapshot = {
   ],
 };
 
+const observability = {
+  source: "SÉRIE DIDÁTICA FIXA",
+  cycles: [
+    { id: "C-05", records: 12, events: 1, completeness: 92 },
+    { id: "C-04", records: 15, events: 0, completeness: 94 },
+    { id: "C-03", records: 14, events: 2, completeness: 91 },
+    { id: "C-02", records: 18, events: 1, completeness: 96 },
+    { id: "C-01", records: 17, events: 0, completeness: 95 },
+    { id: "C-00", records: 21, events: 2, completeness: 97 },
+  ],
+};
+
 const STATUS_LABELS = new Set(["NOMINAL", "OBSERVAÇÃO"]);
 const OBJECT_STATUSES = new Set(["ESTÁVEL", "OBSERVAÇÃO"]);
 const ALERT_LEVELS = new Set(["INFO", "AVISO"]);
+
+function summarizeSeries(values) {
+  const minimum = Math.min(...values);
+  const maximum = Math.max(...values);
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const change = values.at(-1) - values[0];
+
+  return {
+    minimum,
+    maximum,
+    mean,
+    change,
+    trend: change > 0 ? "AUMENTO" : change < 0 ? "REDUÇÃO" : "ESTÁVEL",
+  };
+}
+
+function sparkline(values) {
+  const glyphs = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
+  const minimum = Math.min(...values);
+  const range = Math.max(...values) - minimum;
+
+  return values
+    .map((value) => {
+      const level = range === 0
+        ? 0
+        : Math.round(((value - minimum) / range) * (glyphs.length - 1));
+      return glyphs[level];
+    })
+    .join("");
+}
 
 function frame(lines, useColor = false, options = {}) {
   const width = Math.max(
@@ -108,6 +150,90 @@ export function analyzeScenario() {
     passed: checks.filter(({ passed }) => passed).length,
     total: checks.length,
   };
+}
+
+export function analyzeObservability() {
+  const series = [
+    {
+      key: "records",
+      label: "Registros do cenário por ciclo",
+      unit: "registros/ciclo",
+      values: observability.cycles.map(({ records }) => records),
+    },
+    {
+      key: "events",
+      label: "Eventos didáticos por ciclo",
+      unit: "eventos/ciclo",
+      values: observability.cycles.map(({ events }) => events),
+    },
+    {
+      key: "completeness",
+      label: "Campos preenchidos no conjunto",
+      unit: "%",
+      values: observability.cycles.map(({ completeness }) => completeness),
+    },
+  ];
+
+  return {
+    source: observability.source,
+    cycleCount: observability.cycles.length,
+    cycles: observability.cycles.map(({ id }) => id),
+    series: series.map((item) => ({
+      ...item,
+      ...summarizeSeries(item.values),
+    })),
+  };
+}
+
+export function renderObservability(useColor = false) {
+  const analysis = analyzeObservability();
+  const lines = [
+    "OBSERVABILIDADE DO CENÁRIO",
+    `${analysis.source}  •  ${analysis.cycleCount} CICLOS RELATIVOS`,
+    "",
+    "SÉRIE                         VALORES                  MÍN / MÉD / MÁX",
+    ...analysis.series.map((series) => {
+      const values = series.values.join(", ");
+      const mean = Number.isInteger(series.mean)
+        ? String(series.mean)
+        : series.mean.toFixed(1);
+      const stats = `${series.minimum} / ${mean} / ${series.maximum} ${series.unit}`;
+      return `${series.label.padEnd(30)} ${sparkline(series.values)} ${values.padEnd(19)} ${stats}`;
+    }),
+    "",
+    `CICLOS: ${analysis.cycles.join(" → ")}`,
+    "Barras mostram variação relativa dentro de cada série, não escala comum.",
+    "Os dados são fixos e não representam telemetria, órbitas ou sistemas reais.",
+  ];
+
+  return frame(lines, useColor, {
+    centerLines: [0, 1, 7, 8, 9],
+    accentLines: [1],
+  });
+}
+
+export function renderLearning(useColor = false) {
+  const analysis = analyzeObservability();
+  const lines = [
+    "LEITURA GUIADA DAS SÉRIES",
+    "COMO INTERPRETAR OS DADOS DIDÁTICOS",
+    "",
+    ...analysis.series.map((series) => {
+      const change = series.change > 0 ? `+${series.change}` : String(series.change);
+      return `${series.label}: ${series.trend} (${change} ${series.unit})`;
+    }),
+    "",
+    "MÍN / MÉD / MÁX: menor, média aritmética e maior valor da série.",
+    "Tendência compara apenas o primeiro e o último ciclo da amostra.",
+    "Correlação, causalidade e previsão não são calculadas.",
+    "Ciclos C-05 a C-00 são rótulos relativos, sem horário de calendário.",
+    "Use os dados para praticar leitura; não são orientação operacional.",
+  ];
+
+  return frame(lines, useColor, {
+    centerLines: [0, 1, 8, 9, 10, 11, 12],
+    accentLines: [1],
+  });
 }
 
 export function renderSectorAnalysis(useColor = false) {
@@ -198,6 +324,7 @@ export function renderDashboard(useColor = false, terminalColumns = 80) {
     "",
     ...mapLines,
     "",
+    `OBSERVABILIDADE  ${String(observability.cycles.length).padStart(2, "0")} CICLOS  •  03 SÉRIES DIDÁTICAS`,
     ...snapshot.sectors.map((sector) => {
       const objectCount = snapshot.objects.filter(
         (object) => object.sectorId === sector.id,

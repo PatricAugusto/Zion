@@ -4,6 +4,8 @@ import {
   renderAnalysis,
   renderAlerts,
   renderDashboard,
+  renderLearning,
+  renderObservability,
   renderObjects,
   renderProtocols,
   renderSectorAnalysis,
@@ -26,11 +28,14 @@ const views = new Map([
   ["4", renderSectorAnalysis],
   ["5", renderAlertAnalysis],
   ["6", renderProtocols],
+  ["7", renderObservability],
+  ["8", renderLearning],
 ]);
 
 const menu =
   "\n[1] Objetos  [2] Alertas  [3] Integridade  [4] Setores\n" +
-  "[5] Resumo de alertas  [6] Segurança  [q] Sair";
+  "[5] Resumo de alertas  [6] Segurança  [7] Séries  [8] Leitura guiada\n" +
+  "[q] Sair";
 
 async function readAnswer(prompt) {
   process.stdout.write(prompt);
@@ -58,7 +63,7 @@ try {
 
     const renderView = views.get(choice);
     if (!renderView) {
-      console.log("\nOpção inválida. Escolha 1–6 ou q.\n");
+      console.log("\nOpção inválida. Escolha 1–8 ou q.\n");
       continue;
     }
 

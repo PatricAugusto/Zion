@@ -7,6 +7,8 @@ import {
   renderAlerts,
   renderAnalysis,
   renderDashboard,
+  renderLearning,
+  renderObservability,
   renderObjects,
   renderProtocols,
   renderSectorAnalysis,
@@ -20,6 +22,8 @@ const renderers = [
   renderAnalysis,
   renderSectorAnalysis,
   renderAlertAnalysis,
+  renderObservability,
+  renderLearning,
   renderProtocols,
 ];
 

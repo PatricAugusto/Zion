@@ -22,6 +22,8 @@ princípios de segurança:
 | `4` | Comparativo e contagens por setor |
 | `5` | Resumo dos rótulos dos alertas fictícios |
 | `6` | Princípios e limites de segurança |
+| `7` | Séries de observabilidade sintéticas |
+| `8` | Leitura guiada e estatísticas descritivas |
 | `q` | Sair |
 
 Para executar os testes:
@@ -66,6 +68,15 @@ as etiquetas de texto permanecem presentes sem ANSI. A interface usa um painel
 espacial em terminal com mapa conceitual e indicadores locais; o modo colorido
 é ativado apenas em terminais interativos e pode ser desativado definindo
 `NO_COLOR`.
+
+## Observabilidade para aprendizado
+
+As opções `7` e `8` apresentam seis ciclos relativos e três séries didáticas:
+registros processados no cenário, eventos fictícios e preenchimento dos campos
+da amostra. Mínimo, média, máximo e variação entre o primeiro e o último ciclo
+são estatísticas descritivas; não há previsão, correlação ou inferência causal.
+Os ciclos não têm horário de calendário, e as séries não são telemetria nem
+métricas físicas.
 
 ## Limites desta versão
 
