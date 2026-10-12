@@ -6,7 +6,10 @@
   "type": "module",
   "scripts": {
     "start": "node src/main.js",
-    "test": "node --test"
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "node --test test/unit/dashboard.test.js",
+    "test:integration": "node --test test/integration/cli.test.js",
+    "security:audit": "npm audit --audit-level=high"
   },
   "engines": {
     "node": ">=20"

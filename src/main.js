@@ -13,11 +13,11 @@ const terminal = createInterface({
 const answers = terminal[Symbol.asyncIterator]();
 const useColor = Boolean(process.stdout.isTTY);
 
-const views = {
-  "1": renderObjects,
-  "2": renderAlerts,
-  "3": renderProtocols,
-};
+const views = new Map([
+  ["1", renderObjects],
+  ["2", renderAlerts],
+  ["3", renderProtocols],
+]);
 
 async function readAnswer(prompt) {
   process.stdout.write(prompt);
@@ -43,9 +43,9 @@ try {
       continue;
     }
 
-    const renderView = views[choice];
+    const renderView = views.get(choice);
     if (!renderView) {
-      console.log("\nOpcao invalida. Escolha 1, 2, 3 ou q.\n");
+      console.log("\nOpção inválida. Escolha 1, 2, 3 ou q.\n");
       continue;
     }
 
