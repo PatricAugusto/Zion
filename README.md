@@ -32,9 +32,10 @@ Para executar os testes:
 npm test
 ```
 
-O comando principal usa o test runner nativo do Node.js, descobre
-automaticamente todos os arquivos `*.test.js` dentro de `test/` e apresenta
-um resumo único das suítes executadas:
+O comando principal abre o console de testes do Zion, depois usa o test runner
+nativo do Node.js para descobrir automaticamente todos os arquivos `*.test.js`
+dentro de `test/`. O relatório detalhado original e o código de falha são
+preservados:
 
 ```powershell
 npm test
@@ -47,6 +48,10 @@ npm run test:unit
 npm run test:integration
 npm run test:security
 ```
+
+O console visual usa cor apenas em terminais interativos; defina `NO_COLOR`
+para desativá-la. A moldura é apenas visual: a execução continua local e não
+realiza operações de rede ou ações externas.
 
 A suíte de segurança verifica entradas hostis e extensas no menu, tentativas de
 injeção ANSI/OSC, caracteres de controle nas telas e limites de dimensões do

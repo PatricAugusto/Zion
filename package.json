@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/main.js",
-    "test": "node --test --test-reporter=spec",
+    "test": "node scripts/run-tests.js",
     "test:unit": "node --test --test-reporter=spec test/unit/dashboard.test.js",
     "test:integration": "node --test --test-reporter=spec test/integration/cli.test.js",
     "test:security": "node --test --test-reporter=spec test/security/security.test.js",
