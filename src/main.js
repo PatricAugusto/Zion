@@ -1,9 +1,12 @@
 import { createInterface } from "node:readline/promises";
 import {
+  renderAlertAnalysis,
+  renderAnalysis,
   renderAlerts,
   renderDashboard,
   renderObjects,
   renderProtocols,
+  renderSectorAnalysis,
 } from "./dashboard.js";
 
 const terminal = createInterface({
@@ -16,8 +19,15 @@ const useColor = Boolean(process.stdout.isTTY);
 const views = new Map([
   ["1", renderObjects],
   ["2", renderAlerts],
-  ["3", renderProtocols],
+  ["3", renderAnalysis],
+  ["4", renderSectorAnalysis],
+  ["5", renderAlertAnalysis],
+  ["6", renderProtocols],
 ]);
+
+const menu =
+  "\n[1] Objetos  [2] Alertas  [3] Integridade  [4] Setores\n" +
+  "[5] Resumo de alertas  [6] Segurança  [q] Sair";
 
 async function readAnswer(prompt) {
   process.stdout.write(prompt);
@@ -30,7 +40,7 @@ try {
 
   while (running) {
     console.log(renderDashboard(useColor));
-    console.log("\n[1] Objetos  [2] Alertas  [3] Princípios  [q] Sair");
+    console.log(menu);
     const answer = await readAnswer("zion> ");
     if (answer === null) {
       running = false;
@@ -45,7 +55,7 @@ try {
 
     const renderView = views.get(choice);
     if (!renderView) {
-      console.log("\nOpção inválida. Escolha 1, 2, 3 ou q.\n");
+      console.log("\nOpção inválida. Escolha 1–6 ou q.\n");
       continue;
     }
 

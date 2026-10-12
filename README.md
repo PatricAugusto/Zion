@@ -11,8 +11,20 @@ Requer Node.js 20 ou superior. O projeto não tem dependências externas.
 npm start
 ```
 
-No painel, use `1` para objetos, `2` para alertas, `3` para princípios de
-segurança e `q` para sair. Para executar os testes:
+No painel, use as opções para abrir objetos, alertas, análises locais e
+princípios de segurança:
+
+| Opção | Tela |
+| --- | --- |
+| `1` | Objetos do cenário |
+| `2` | Alertas simulados |
+| `3` | Integridade estrutural dos dados fictícios |
+| `4` | Comparativo e contagens por setor |
+| `5` | Resumo dos rótulos dos alertas fictícios |
+| `6` | Princípios e limites de segurança |
+| `q` | Sair |
+
+Para executar os testes:
 
 ```powershell
 npm test
@@ -39,6 +51,11 @@ O menu aceita somente as opções documentadas; escolhas inválidas, inclusive
 nomes de propriedades herdadas do JavaScript, não selecionam telas. Cores ANSI
 são desativadas fora de um terminal interativo. O `.gitignore` exclui arquivos
 de ambiente e artefatos locais comuns.
+
+As análises verificam a integridade estrutural e exibem contagens do conjunto
+fictício local. Não estimam órbitas, colisões, trajetórias, riscos ou estados
+reais, e não constituem recomendações operacionais. A cor é apenas decoração;
+as etiquetas de texto permanecem presentes sem ANSI.
 
 ## Limites desta versão
 
