@@ -124,3 +124,11 @@ test("dashboard adapts its panel width to terminal size", () => {
     assert.match(output, /Z I O N/);
   }
 });
+
+test("dashboard safely falls back for invalid terminal dimensions", () => {
+  const defaultOutput = renderDashboard(false, 80);
+
+  for (const columns of [Number.NaN, Number.POSITIVE_INFINITY]) {
+    assert.equal(renderDashboard(false, columns), defaultOutput);
+  }
+});

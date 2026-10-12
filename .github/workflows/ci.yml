@@ -25,7 +25,7 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Run unit and integration tests
+      - name: Run unit, integration, and security suites
         run: npm test
       - name: Audit dependencies
         run: npm run security:audit

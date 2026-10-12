@@ -35,7 +35,14 @@ Os testes unitários e de integração também podem ser executados separadament
 ```powershell
 npm run test:unit
 npm run test:integration
+npm run test:security
 ```
+
+A suíte de segurança verifica entradas hostis e extensas no menu, tentativas de
+injeção ANSI/OSC, caracteres de controle nas telas e limites de dimensões do
+terminal. Ela é executada por `npm test` e no CI para cada versão suportada do
+Node.js. Esses testes são verificações automatizadas de regressão, não uma
+certificação ou auditoria de segurança independente.
 
 ## Segurança
 

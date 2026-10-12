@@ -161,7 +161,10 @@ export function renderAnalysis(useColor = false) {
 
 export function renderDashboard(useColor = false, terminalColumns = 80) {
   const analysis = analyzeScenario();
-  const width = Math.max(52, Math.min(100, terminalColumns - 4));
+  const safeColumns = Number.isFinite(terminalColumns)
+    ? Math.floor(terminalColumns)
+    : 80;
+  const width = Math.max(52, Math.min(100, safeColumns - 4));
   const lines = [
     "Z I O N   //   CENTRO DE CONSCIÊNCIA ESPACIAL",
     "NÚCLEO DEMONSTRATIVO  |  SISTEMA ISOLADO",
