@@ -1,0 +1,14 @@
+{
+  "name": "zion",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Painel de terminal para simulacao de consciencia espacial",
+  "type": "module",
+  "scripts": {
+    "start": "node src/main.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
