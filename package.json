@@ -6,10 +6,10 @@
   "type": "module",
   "scripts": {
     "start": "node src/main.js",
-    "test": "npm run test:unit && npm run test:integration && npm run test:security",
-    "test:unit": "node --test test/unit/dashboard.test.js",
-    "test:integration": "node --test test/integration/cli.test.js",
-    "test:security": "node --test test/security/security.test.js",
+    "test": "node --test --test-reporter=spec",
+    "test:unit": "node --test --test-reporter=spec test/unit/dashboard.test.js",
+    "test:integration": "node --test --test-reporter=spec test/integration/cli.test.js",
+    "test:security": "node --test --test-reporter=spec test/security/security.test.js",
     "security:audit": "npm audit --audit-level=high"
   },
   "engines": {

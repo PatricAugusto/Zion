@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import test from "node:test";
+import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   renderAlertAnalysis,
@@ -26,6 +26,8 @@ const renderers = [
   renderLearning,
   renderProtocols,
 ];
+
+describe("Zion security regression tests", () => {
 
 function runCli(input) {
   return spawnSync(process.execPath, [entryPoint], {
@@ -87,4 +89,6 @@ test("dashboard bounds invalid and extreme terminal dimensions", () => {
 
   assert.ok(renderDashboard(false, Number.NaN).length < 4096);
   assert.ok(renderDashboard(false, 1e100).length < 4096);
+});
+
 });

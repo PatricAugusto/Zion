@@ -32,7 +32,15 @@ Para executar os testes:
 npm test
 ```
 
-Os testes unitários e de integração também podem ser executados separadamente:
+O comando principal usa o test runner nativo do Node.js, descobre
+automaticamente todos os arquivos `*.test.js` dentro de `test/` e apresenta
+um resumo único das suítes executadas:
+
+```powershell
+npm test
+```
+
+As camadas também podem ser executadas separadamente:
 
 ```powershell
 npm run test:unit
@@ -42,9 +50,9 @@ npm run test:security
 
 A suíte de segurança verifica entradas hostis e extensas no menu, tentativas de
 injeção ANSI/OSC, caracteres de controle nas telas e limites de dimensões do
-terminal. Ela é executada por `npm test` e no CI para cada versão suportada do
-Node.js. Esses testes são verificações automatizadas de regressão, não uma
-certificação ou auditoria de segurança independente.
+terminal. Ela é descoberta por `npm test` e executada no CI para cada versão
+suportada do Node.js. Esses testes são verificações automatizadas de regressão,
+não uma certificação ou auditoria de segurança independente.
 
 ## Segurança
 

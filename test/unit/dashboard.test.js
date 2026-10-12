@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { describe, test } from "node:test";
 import {
   analyzeObservability,
   analyzeScenario,
@@ -13,6 +13,8 @@ import {
   renderProtocols,
   renderSectorAnalysis,
 } from "../../src/dashboard.js";
+
+describe("Zion unit tests", () => {
 
 test("dashboard identifies the environment as isolated and simulated", () => {
   const output = renderDashboard();
@@ -202,4 +204,6 @@ test("dashboard safely falls back for invalid terminal dimensions", () => {
   for (const columns of [Number.NaN, Number.POSITIVE_INFINITY]) {
     assert.equal(renderDashboard(false, columns), defaultOutput);
   }
+});
+
 });

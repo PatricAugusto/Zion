@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import test from "node:test";
+import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const entryPoint = fileURLToPath(new URL("../../src/main.js", import.meta.url));
+
+describe("Zion CLI integration tests", () => {
 
 function runCli(input) {
   return spawnSync(process.execPath, [entryPoint], {
@@ -47,4 +49,6 @@ test("end of input exits without hanging or executing an action", () => {
   assert.equal(result.error, undefined);
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /Zion encerrado\. Nenhuma ação externa foi executada\./);
+});
+
 });
