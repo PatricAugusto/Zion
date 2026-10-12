@@ -11,8 +11,10 @@ import {
   renderObservability,
   renderObjects,
   renderProtocols,
+  renderSessionLog,
   renderSectorAnalysis,
 } from "../../src/dashboard.js";
+import { createSessionLog } from "../../src/session-log.js";
 
 const entryPoint = fileURLToPath(new URL("../../src/main.js", import.meta.url));
 const renderers = [
@@ -25,6 +27,7 @@ const renderers = [
   renderObservability,
   renderLearning,
   renderProtocols,
+  () => renderSessionLog(createSessionLog().read()),
 ];
 
 describe("Zion security regression tests", () => {
@@ -89,6 +92,20 @@ test("dashboard bounds invalid and extreme terminal dimensions", () => {
 
   assert.ok(renderDashboard(false, Number.NaN).length < 4096);
   assert.ok(renderDashboard(false, 1e100).length < 4096);
+});
+
+test("session log accepts only static event and screen labels", () => {
+  const sessionLog = createSessionLog();
+  const payload = "\u001b]0;ZION-LOG-INJECTION\u0007";
+
+  assert.throws(() => sessionLog.record("SCREEN_OPENED", payload), TypeError);
+  assert.throws(() => sessionLog.record(payload), TypeError);
+  sessionLog.record("INVALID_INPUT");
+
+  const output = renderSessionLog(sessionLog.read());
+  assert.doesNotMatch(output, /\u001b/);
+  assert.doesNotMatch(output, /ZION-LOG-INJECTION/);
+  assert.match(output, /Entrada de menu rejeitada/);
 });
 
 });

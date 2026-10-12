@@ -11,6 +11,7 @@ import {
   renderObservability,
   renderObjects,
   renderProtocols,
+  renderSessionLog,
   renderSectorAnalysis,
 } from "../../src/dashboard.js";
 
@@ -82,6 +83,33 @@ test("guided reading explains descriptive statistics without predictive claims",
   assert.match(output, /Tendência compara apenas o primeiro e o último ciclo/);
   assert.match(output, /Correlação, causalidade e previsão não são calculadas/);
   assert.match(output, /não são orientação operacional/);
+});
+
+test("session log view shows recent events and retention without raw input", () => {
+  const output = renderSessionLog({
+    entries: [
+      {
+        sequence: 1,
+        timestamp: "2026-10-12T12:00:00.000Z",
+        level: "INFO",
+        message: "Sessão Zion iniciada.",
+      },
+      {
+        sequence: 2,
+        timestamp: "2026-10-12T12:01:00.000Z",
+        level: "AVISO",
+        message: "Entrada de menu rejeitada.",
+      },
+    ],
+    discardedCount: 0,
+    capacity: 50,
+  });
+
+  assert.match(output, /REGISTRO DE SESSÃO LOCAL/);
+  assert.match(output, /2026-10-12T12:00:00.000Z/);
+  assert.match(output, /Sessão Zion iniciada/);
+  assert.match(output, /ENTRADAS RETIDAS: 2\/50/);
+  assert.match(output, /Texto digitado não é armazenado/);
 });
 
 test("object view shows only the fixed simulated object set", () => {

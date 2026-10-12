@@ -236,6 +236,33 @@ export function renderLearning(useColor = false) {
   });
 }
 
+export function renderSessionLog(
+  { entries, discardedCount, capacity },
+  useColor = false,
+) {
+  const visibleEntries = entries.slice(-12);
+  const lines = [
+    "REGISTRO DE SESSÃO LOCAL",
+    "EVENTOS DO PROCESSO ATUAL  •  VOLÁTIL  •  NÃO É AUDITORIA PERSISTENTE",
+    "",
+    "SEQ  HORÁRIO UTC              NÍVEL   EVENTO",
+    ...(visibleEntries.length === 0
+      ? ["Nenhum evento registrado nesta sessão."]
+      : visibleEntries.map(
+          ({ sequence, timestamp, level, message }) =>
+            `${String(sequence).padStart(3, "0")}  ${timestamp}  ${level.padEnd(5)}  ${message}`,
+        )),
+    "",
+    `ENTRADAS RETIDAS: ${entries.length}/${capacity}  •  DESCARTADAS POR LIMITE: ${discardedCount}`,
+    "Texto digitado não é armazenado; eventos usam rótulos predefinidos.",
+  ];
+
+  return frame(lines, useColor, {
+    centerLines: [0, 1, 10, 11],
+    accentLines: [1],
+  });
+}
+
 export function renderSectorAnalysis(useColor = false) {
   const lines = [
     "ANÁLISE COMPARATIVA DE SETORES",

@@ -17,7 +17,7 @@ function runCli(input) {
 }
 
 test("all menu choices open their view and quit cleanly", () => {
-  const result = runCli("1\n\n2\n\n3\n\n4\n\n5\n\n6\n\n7\n\n8\n\nq\n");
+  const result = runCli("1\n\n2\n\n3\n\n4\n\n5\n\n6\n\n7\n\n8\n\n9\n\nq\n");
 
   assert.equal(result.error, undefined);
   assert.equal(result.status, 0, result.stderr);
@@ -29,13 +29,25 @@ test("all menu choices open their view and quit cleanly", () => {
   assert.match(result.stdout, /PRINCÍPIOS DE SEGURANÇA DO ZION/);
   assert.match(result.stdout, /OBSERVABILIDADE DO CENÁRIO/);
   assert.match(result.stdout, /LEITURA GUIADA DAS SÉRIES/);
+  assert.match(result.stdout, /REGISTRO DE SESSÃO LOCAL/);
+  assert.match(result.stdout, /Tela aberta: Leitura guiada/);
   assert.match(result.stdout, /Resumo de alertas/);
   assert.match(result.stdout, /Zion encerrado\. Nenhuma ação externa foi executada\./);
   assert.doesNotMatch(result.stdout, /\u001b/);
 });
 
+test("session log records rejected menu events without echoing user input", () => {
+  const secret = "PRIVATE_INPUT_SHOULD_NOT_BE_LOGGED";
+  const result = runCli(`${secret}\n9\n\nq\n`);
+
+  assert.equal(result.error, undefined);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Entrada de menu rejeitada/);
+  assert.doesNotMatch(result.stdout, new RegExp(secret));
+});
+
 test("unknown and inherited object-property choices are rejected", () => {
-  const result = runCli("constructor\ntoString\n__proto__\n9\nq\n");
+  const result = runCli("constructor\ntoString\n__proto__\n10\nq\n");
 
   assert.equal(result.error, undefined);
   assert.equal(result.status, 0, result.stderr);

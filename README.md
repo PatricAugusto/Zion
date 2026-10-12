@@ -24,6 +24,7 @@ princípios de segurança:
 | `6` | Princípios e limites de segurança |
 | `7` | Séries de observabilidade sintéticas |
 | `8` | Leitura guiada e estatísticas descritivas |
+| `9` | Registro de eventos da sessão atual |
 | `q` | Sair |
 
 Para executar os testes:
@@ -73,6 +74,11 @@ O menu aceita somente as opções documentadas; escolhas inválidas, inclusive
 nomes de propriedades herdadas do JavaScript, não selecionam telas. Cores ANSI
 são desativadas fora de um terminal interativo. O `.gitignore` exclui arquivos
 de ambiente e artefatos locais comuns.
+
+O registro da opção `9` mantém até 50 eventos em memória durante a sessão atual.
+Ele usa rótulos fixos para início, telas abertas, opções inválidas e encerramento;
+o texto digitado pelo usuário não é armazenado. Os eventos são descartados ao
+fechar o processo e não constituem auditoria persistente.
 
 As análises verificam a integridade estrutural e exibem contagens do conjunto
 fictício local. Não estimam órbitas, colisões, trajetórias, riscos ou estados
