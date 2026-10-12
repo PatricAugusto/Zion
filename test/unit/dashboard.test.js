@@ -97,21 +97,44 @@ test("protocol view states the safety boundaries", () => {
 test("color is opt-in and adds only fixed ANSI formatting", () => {
   const plainOutput = renderDashboard();
   const coloredOutput = renderDashboard(true);
+  const normalizedColorOutput = coloredOutput
+    .replace(/\u001b\[(?:96|1;96|95|92|2|0)m/g, "")
+    .split("\n")
+    .map((line) => {
+      if (/^╭─+╮$/.test(line)) return line.replace(/^╭/, "+").replace(/╮$/, "+").replace(/─/g, "-");
+      if (/^╰─+╯$/.test(line)) return line.replace(/^╰/, "+").replace(/╯$/, "+").replace(/─/g, "-");
+      if (/^│.*│$/.test(line)) return line.replace(/^│/, "|").replace(/│$/, "|");
+      return line;
+    })
+    .join("\n");
 
   assert.doesNotMatch(plainOutput, /\u001b/);
   assert.match(coloredOutput, /^\u001b\[96m╭/);
-  assert.match(coloredOutput, /\u001b\[0m\r?\n\u001b\[1;96m│ Z I O N/);
-  assert.equal(
-    coloredOutput.replace(/\u001b\[(?:96|1;96|95|92|2|0)m/g, "").replace(/[╭╮╰╯│─]/g, (border) => ({
-      "╭": "+",
-      "╮": "+",
-      "╰": "+",
-      "╯": "+",
-      "│": "|",
-      "─": "-",
-    })[border]),
-    plainOutput,
-  );
+  assert.match(coloredOutput, /\u001b\[0m\r?\n\u001b\[1;96m│\s+✦  Z I O N/);
+  assert.equal(normalizedColorOutput, plainOutput);
+});
+
+test("dashboard headings and safety notices are centered in the panel", () => {
+  const output = renderDashboard();
+  const panelLines = output
+    .split("\n")
+    .slice(1, -1)
+    .map((line) => line.slice(2, -2));
+
+  for (const text of [
+    "✦  Z I O N   /   CENTRO DE CONSCIÊNCIA ESPACIAL  ✦",
+    "NÚCLEO DEMONSTRATIVO  •  SISTEMA ISOLADO",
+    "MAPA DE SETORES / SEM ESCALA",
+    "✧  DADOS FICTÍCIOS  •  APENAS LEITURA  ✧",
+  ]) {
+    const line = panelLines.find((candidate) => candidate.includes(text));
+    assert.ok(line, `expected panel line containing: ${text}`);
+    const content = line;
+    const leadingSpaces = content.length - content.trimStart().length;
+    const trailingSpaces = content.length - content.trimEnd().length;
+
+    assert.ok(Math.abs(leadingSpaces - trailingSpaces) <= 1, text);
+  }
 });
 
 test("dashboard adapts its panel width to terminal size", () => {

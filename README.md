@@ -72,3 +72,6 @@ espacial em terminal com mapa conceitual e indicadores locais; o modo colorido
 Todos os setores, objetos e alertas são fictícios. O Zion não recebe telemetria,
 não consulta dados orbitais e não envia comandos a sistemas externos. O mapa é
 esquemático e não está em escala.
+
+O painel centraliza títulos, indicadores e avisos para facilitar a leitura;
+linhas tabulares permanecem alinhadas para preservar a comparação de dados.

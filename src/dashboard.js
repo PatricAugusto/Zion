@@ -43,8 +43,11 @@ function frame(lines, useColor = false, options = {}) {
   const colorize = (value, code) =>
     useColor ? `\u001b[${code}m${value}\u001b[0m` : value;
   const body = lines.map((line, index) => {
-    const padded = `│ ${line.padEnd(width)} │`;
-    if (!useColor) return `| ${line.padEnd(width)} |`;
+    const content = options.centerLines?.includes(index)
+      ? line.padStart(Math.floor((width + line.length) / 2)).padEnd(width)
+      : line.padEnd(width);
+    const padded = `│ ${content} │`;
+    if (!useColor) return `| ${content} |`;
     if (index === 0) return colorize(padded, "1;96");
     if (options.accentLines?.includes(index)) return colorize(padded, "95");
     if (options.statusLines?.includes(index)) return colorize(padded, "92");
@@ -137,7 +140,10 @@ export function renderSectorAnalysis(useColor = false) {
     "Contagens não indicam risco, distância, trajetória ou segurança real.",
   ];
 
-  return frame(lines, useColor);
+  return frame(lines, useColor, {
+    centerLines: [0, 1, 3, 8, 14],
+    accentLines: [1],
+  });
 }
 
 export function renderAnalysis(useColor = false) {
@@ -156,7 +162,11 @@ export function renderAnalysis(useColor = false) {
     "Não é uma avaliação de risco ou condição espacial real.",
   ];
 
-  return frame(lines, useColor);
+  return frame(lines, useColor, {
+    centerLines: [0, 1, 3, 14, 15],
+    accentLines: [1],
+    statusLines: analysis.checks.map((check, index) => index + 5),
+  });
 }
 
 export function renderDashboard(useColor = false, terminalColumns = 80) {
@@ -165,17 +175,28 @@ export function renderDashboard(useColor = false, terminalColumns = 80) {
     ? Math.floor(terminalColumns)
     : 80;
   const width = Math.max(52, Math.min(100, safeColumns - 4));
+  const mapLines =
+    width < 68
+      ? [
+          "╭──── MAPA DE SETORES / SEM ESCALA ────╮",
+          "                    · ✦ ·",
+          "             [A1] -- (ZION) -- [C3]",
+          "                    · [B2] ·",
+        ]
+      : [
+          "╭─────────────── MAPA DE SETORES / SEM ESCALA ───────────────╮",
+          "                         ·  ✦  ·",
+          "                    ·     \\ | /     ·",
+          "         [A1] ════════ ◉ ZION ◉ ════════ [C3]",
+          "                    ·     / | \\     ·",
+          "                         · [B2] ·",
+        ];
   const lines = [
-    "Z I O N   //   CENTRO DE CONSCIÊNCIA ESPACIAL",
-    "NÚCLEO DEMONSTRATIVO  |  SISTEMA ISOLADO",
-    "SEM TELEMETRIA  |  SEM CONEXÕES EXTERNAS",
+    "✦  Z I O N   /   CENTRO DE CONSCIÊNCIA ESPACIAL  ✦",
+    "NÚCLEO DEMONSTRATIVO  •  SISTEMA ISOLADO",
+    "SEM TELEMETRIA  •  SEM CONEXÕES EXTERNAS",
     "",
-    "MAPA DE SETORES   /   ESQUEMÁTICO - SEM ESCALA",
-    "                    .       *       .",
-    "               .       \\   |   /       .",
-    "        [A1] ======= ( Z I O N ) ======= [C3]",
-    "               .       /   |   \\       .",
-    "                    '     [B2]    '",
+    ...mapLines,
     "",
     ...snapshot.sectors.map((sector) => {
       const objectCount = snapshot.objects.filter(
@@ -194,15 +215,21 @@ export function renderDashboard(useColor = false, terminalColumns = 80) {
         ]),
     `INTEGRIDADE LOCAL  [${"#".repeat(analysis.passed)}]  ${analysis.passed}/${analysis.total}`,
     "",
-    "DADOS FICTÍCIOS  |  APENAS LEITURA",
-    "SEM AÇÕES EXTERNAS  |  ANÁLISES NÃO INDICAM RISCO REAL",
+    "✧  DADOS FICTÍCIOS  •  APENAS LEITURA  ✧",
+    "SEM AÇÕES EXTERNAS  •  ANÁLISES NÃO INDICAM RISCO REAL",
   ];
 
+  const centerLines = lines.flatMap((line, index) =>
+    line !== "" && !/^\[(?:A1|B2|C3)\]/.test(line) ? [index] : [],
+  );
+  const coreLine = lines.findIndex((line) => line.includes("ZION"));
+  const safetyBadgeLine = lines.findIndex((line) => line.startsWith("✧"));
   return frame(lines, useColor, {
     width,
-    accentLines: [7],
-    statusLines: [16],
-    secondaryLines: [1, 2, 4],
+    centerLines,
+    accentLines: [coreLine],
+    statusLines: [safetyBadgeLine],
+    secondaryLines: [1, 2, 5],
   });
 }
 
@@ -220,7 +247,9 @@ export function renderObjects(useColor = false) {
     "Identificadores e estados acima são demonstrativos.",
   ];
 
-  return frame(lines, useColor);
+  return frame(lines, useColor, {
+    centerLines: [0, 7],
+  });
 }
 
 export function renderAlerts(useColor = false) {
@@ -234,7 +263,9 @@ export function renderAlerts(useColor = false) {
     "Alertas não representam eventos espaciais reais.",
   ];
 
-  return frame(lines, useColor);
+  return frame(lines, useColor, {
+    centerLines: [0, 5],
+  });
 }
 
 export function renderAlertAnalysis(useColor = false) {
@@ -254,7 +285,10 @@ export function renderAlertAnalysis(useColor = false) {
     "Os rótulos são didáticos e não indicam urgência ou ameaça real.",
   ];
 
-  return frame(lines, useColor);
+  return frame(lines, useColor, {
+    centerLines: [0, 1, 6, 7],
+    accentLines: [1],
+  });
 }
 
 export function renderProtocols(useColor = false) {
@@ -268,5 +302,5 @@ export function renderProtocols(useColor = false) {
     "05. Resultados não substituem validação ou supervisão humana.",
   ];
 
-  return frame(lines, useColor);
+  return frame(lines, useColor, { centerLines: [0] });
 }
