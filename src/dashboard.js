@@ -29,18 +29,33 @@ const STATUS_LABELS = new Set(["NOMINAL", "OBSERVAÇÃO"]);
 const OBJECT_STATUSES = new Set(["ESTÁVEL", "OBSERVAÇÃO"]);
 const ALERT_LEVELS = new Set(["INFO", "AVISO"]);
 
-function frame(lines, useColor = false) {
-  const width = Math.max(...lines.map((line) => line.length));
-  const border = `+${"-".repeat(width + 2)}+`;
+function frame(lines, useColor = false, options = {}) {
+  const width = Math.max(
+    ...lines.map((line) => line.length),
+    options.width ?? 0,
+  );
+  const horizontal = useColor ? "─" : "-";
+  const leftTop = useColor ? "╭" : "+";
+  const rightTop = useColor ? "╮" : "+";
+  const leftBottom = useColor ? "╰" : "+";
+  const rightBottom = useColor ? "╯" : "+";
+  const border = `${horizontal.repeat(width + 2)}`;
+  const colorize = (value, code) =>
+    useColor ? `\u001b[${code}m${value}\u001b[0m` : value;
   const body = lines.map((line, index) => {
-    const padded = `| ${line.padEnd(width)} |`;
-    return useColor && index === 0 ? `\u001b[1;36m${padded}\u001b[0m` : padded;
+    const padded = `│ ${line.padEnd(width)} │`;
+    if (!useColor) return `| ${line.padEnd(width)} |`;
+    if (index === 0) return colorize(padded, "1;96");
+    if (options.accentLines?.includes(index)) return colorize(padded, "95");
+    if (options.statusLines?.includes(index)) return colorize(padded, "92");
+    if (options.secondaryLines?.includes(index)) return colorize(padded, "2");
+    return padded;
   });
 
   return [
-    useColor ? `\u001b[36m${border}\u001b[0m` : border,
+    colorize(`${leftTop}${border}${rightTop}`, "96"),
     ...body,
-    useColor ? `\u001b[36m${border}\u001b[0m` : border,
+    colorize(`${leftBottom}${border}${rightBottom}`, "96"),
   ].join("\n");
 }
 
@@ -144,28 +159,48 @@ export function renderAnalysis(useColor = false) {
   return frame(lines, useColor);
 }
 
-export function renderDashboard(useColor = false) {
+export function renderDashboard(useColor = false, terminalColumns = 80) {
   const analysis = analyzeScenario();
+  const width = Math.max(52, Math.min(100, terminalColumns - 4));
   const lines = [
-    "ZION  /  CONSCIÊNCIA ESPACIAL",
-    "AMBIENTE ISOLADO  |  SIMULAÇÃO  |  SEM CONEXÕES EXTERNAS",
+    "Z I O N   //   CENTRO DE CONSCIÊNCIA ESPACIAL",
+    "NÚCLEO DEMONSTRATIVO  |  SISTEMA ISOLADO",
+    "SEM TELEMETRIA  |  SEM CONEXÕES EXTERNAS",
     "",
-    "+--------------------- CENÁRIO SEM ESCALA ---------------------+",
+    "MAPA DE SETORES   /   ESQUEMÁTICO - SEM ESCALA",
+    "                    .       *       .",
+    "               .       \\   |   /       .",
+    "        [A1] ======= ( Z I O N ) ======= [C3]",
+    "               .       /   |   \\       .",
+    "                    '     [B2]    '",
+    "",
     ...snapshot.sectors.map((sector) => {
       const objectCount = snapshot.objects.filter(
         (object) => object.sectorId === sector.id,
       ).length;
       return `[${sector.id}] ${sector.name.padEnd(17)} ${sector.status.padEnd(12)} ${objectCount} OBJ`;
     }),
-    "+---------------------------------------------------------------+",
     "",
-    `OBJETOS ${String(snapshot.objects.length).padStart(2, "0")}  |  ALERTAS ${String(snapshot.alerts.length).padStart(2, "0")}  |  INTEGRIDADE ${analysis.passed}/${analysis.total}`,
+    ...(width < 72
+      ? [
+          `OBJETOS ${String(snapshot.objects.length).padStart(2, "0")}   |   ALERTAS ${String(snapshot.alerts.length).padStart(2, "0")}`,
+          `SETORES ${String(snapshot.sectors.length).padStart(2, "0")}   |   INTEGRIDADE ${analysis.passed}/${analysis.total}`,
+        ]
+      : [
+          `OBJETOS ${String(snapshot.objects.length).padStart(2, "0")}   |   ALERTAS ${String(snapshot.alerts.length).padStart(2, "0")}   |   SETORES ${String(snapshot.sectors.length).padStart(2, "0")}`,
+        ]),
+    `INTEGRIDADE LOCAL  [${"#".repeat(analysis.passed)}]  ${analysis.passed}/${analysis.total}`,
     "",
-    "DADOS FICTÍCIOS. NÃO REPRESENTAM TELEMETRIA OU SITUAÇÃO REAL.",
-    "Somente leitura demonstrativa; nenhuma ação externa é executada.",
+    "DADOS FICTÍCIOS  |  APENAS LEITURA",
+    "SEM AÇÕES EXTERNAS  |  ANÁLISES NÃO INDICAM RISCO REAL",
   ];
 
-  return frame(lines, useColor);
+  return frame(lines, useColor, {
+    width,
+    accentLines: [7],
+    statusLines: [16],
+    secondaryLines: [1, 2, 4],
+  });
 }
 
 export function renderObjects(useColor = false) {

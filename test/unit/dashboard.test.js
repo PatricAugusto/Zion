@@ -14,12 +14,12 @@ import {
 test("dashboard identifies the environment as isolated and simulated", () => {
   const output = renderDashboard();
 
-  assert.match(output, /AMBIENTE ISOLADO/);
-  assert.match(output, /SEM CONEXÕES EXTERNAS/);
+  assert.match(output, /SISTEMA ISOLADO/);
+  assert.match(output, /SEM TELEMETRIA/);
   assert.match(output, /DADOS FICTÍCIOS/);
   assert.match(
     output,
-    /nenhuma ação externa é executada/,
+    /SEM AÇÕES EXTERNAS/,
   );
 });
 
@@ -31,7 +31,7 @@ test("dashboard shows all sectors and derives counts from scenario data", () => 
   assert.match(output, /REGIÃO LUNAR/);
   assert.match(output, /OBJETOS 03/);
   assert.match(output, /ALERTAS 02/);
-  assert.match(output, /INTEGRIDADE 8\/8/);
+  assert.match(output, /INTEGRIDADE LOCAL.*8\/8/);
 });
 
 test("object view shows only the fixed simulated object set", () => {
@@ -99,10 +99,28 @@ test("color is opt-in and adds only fixed ANSI formatting", () => {
   const coloredOutput = renderDashboard(true);
 
   assert.doesNotMatch(plainOutput, /\u001b/);
-  assert.match(coloredOutput, /^\u001b\[36m\+/);
-  assert.match(coloredOutput, /\u001b\[0m\r?\n\u001b\[1;36m\| ZION/);
+  assert.match(coloredOutput, /^\u001b\[96m╭/);
+  assert.match(coloredOutput, /\u001b\[0m\r?\n\u001b\[1;96m│ Z I O N/);
   assert.equal(
-    coloredOutput.replace(/\u001b\[(?:36|1;36|0)m/g, ""),
+    coloredOutput.replace(/\u001b\[(?:96|1;96|95|92|2|0)m/g, "").replace(/[╭╮╰╯│─]/g, (border) => ({
+      "╭": "+",
+      "╮": "+",
+      "╰": "+",
+      "╯": "+",
+      "│": "|",
+      "─": "-",
+    })[border]),
     plainOutput,
   );
+});
+
+test("dashboard adapts its panel width to terminal size", () => {
+  for (const columns of [60, 80, 120]) {
+    const output = renderDashboard(false, columns);
+    const widths = output.split("\n").map((line) => line.length);
+
+    assert.equal(Math.max(...widths), Math.max(56, Math.min(104, columns)));
+    assert.match(output, /DADOS FICTÍCIOS/);
+    assert.match(output, /Z I O N/);
+  }
 });

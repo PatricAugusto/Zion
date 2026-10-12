@@ -14,7 +14,10 @@ const terminal = createInterface({
   output: process.stdout,
 });
 const answers = terminal[Symbol.asyncIterator]();
-const useColor = Boolean(process.stdout.isTTY);
+const useColor =
+  Boolean(process.stdout.isTTY) &&
+  process.env.NO_COLOR === undefined &&
+  process.env.TERM !== "dumb";
 
 const views = new Map([
   ["1", renderObjects],
@@ -39,8 +42,8 @@ try {
   let running = true;
 
   while (running) {
-    console.log(renderDashboard(useColor));
-    console.log(menu);
+    console.log(renderDashboard(useColor, process.stdout.columns ?? 80));
+    console.log(useColor ? `\u001b[96m${menu}\u001b[0m` : menu);
     const answer = await readAnswer("zion> ");
     if (answer === null) {
       running = false;

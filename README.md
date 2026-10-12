@@ -55,7 +55,10 @@ de ambiente e artefatos locais comuns.
 As análises verificam a integridade estrutural e exibem contagens do conjunto
 fictício local. Não estimam órbitas, colisões, trajetórias, riscos ou estados
 reais, e não constituem recomendações operacionais. A cor é apenas decoração;
-as etiquetas de texto permanecem presentes sem ANSI.
+as etiquetas de texto permanecem presentes sem ANSI. A interface usa um painel
+espacial em terminal com mapa conceitual e indicadores locais; o modo colorido
+é ativado apenas em terminais interativos e pode ser desativado definindo
+`NO_COLOR`.
 
 ## Limites desta versão
 
