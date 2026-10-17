@@ -53,10 +53,12 @@ limita a sessão local após 10 entradas inválidas consecutivas; uma opção de
 tela válida reinicia a contagem. O limite reduz floods acidentais ou locais no
 menu, mas não é autenticação nem proteção contra DDoS de rede.
 
-O painel resume os indicadores e compara os setores em uma tabela; o menu
-agrupa as telas por assunto. O console usa cor apenas em terminais interativos;
-defina `NO_COLOR` para desativá-la. A moldura é apenas visual: a execução
-continua local e não realiza operações de rede ou ações externas.
+O painel usa uma hierarquia visual leve: resumo em destaque, setores em linhas
+compactas e barras para comparar volumes do cenário. A cor destaca títulos e
+estados somente em terminais interativos; defina `NO_COLOR` para desativá-la.
+O layout se adapta à largura do terminal, e os rótulos continuam claros sem cor.
+A moldura é apenas visual: a execução continua local e não realiza operações
+de rede ou ações externas.
 
 A suíte de segurança verifica entradas hostis e extensas no menu, floods de
 entradas, tentativas de injeção ANSI/OSC, caracteres de controle nas telas e
@@ -142,7 +144,6 @@ métricas físicas.
 Todos os setores, objetos e alertas são fictícios. O Zion não recebe telemetria,
 não consulta dados orbitais e não envia comandos a sistemas externos.
 
-O painel prioriza os indicadores e as contagens por setor. Os gráficos
-decorativos foram removidos para reduzir ruído visual e deixar os dados
-comparáveis; títulos, dados fictícios e limites de segurança continuam
-identificados.
+O painel prioriza indicadores, comparação por setor e uma leitura em destaque.
+As barras são representações de contagens fictícias, não métricas orbitais;
+títulos, dados demonstrativos e limites de segurança continuam identificados.

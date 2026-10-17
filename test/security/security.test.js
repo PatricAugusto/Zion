@@ -91,7 +91,7 @@ describe("Zion security regression tests", () => {
   });
 
   test("colored screens use only the fixed allowlisted SGR sequences", () => {
-    const allowedSgr = /\u001b\[(?:0|2|92|95|96|1;96)m/g;
+    const allowedSgr = /\u001b\[(?:0|2|36|92|93|95|96|1;96)m/g;
 
     for (const render of renderers) {
       const output = render(true);

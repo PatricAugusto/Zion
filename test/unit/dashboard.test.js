@@ -20,9 +20,9 @@ describe("Zion unit tests", () => {
 test("dashboard identifies the environment as isolated and simulated", () => {
   const output = renderDashboard();
 
-  assert.match(output, /local · apenas leitura/);
-  assert.match(output, /Cenário fictício/);
-  assert.match(output, /Sem telemetria ou ações externas/);
+  assert.match(output, /workspace local/);
+  assert.match(output, /simulação didática/);
+  assert.match(output, /SEM TELEMETRIA.*SEM AÇÕES EXTERNAS/);
 });
 
 test("dashboard shows all sectors and derives counts from scenario data", () => {
@@ -31,10 +31,11 @@ test("dashboard shows all sectors and derives counts from scenario data", () => 
   assert.match(output, /ÓRBITA BAIXA/);
   assert.match(output, /ÓRBITA MÉDIA/);
   assert.match(output, /REGIÃO LUNAR/);
-  assert.match(output, /OBJETOS 03\s+\|\s+ALERTAS 02\s+\|\s+SETORES 03/);
-  assert.match(output, /INTEGRIDADE 8\/8\s+\|\s+SÉRIES 06 CICLOS/);
-  assert.match(output, /B2 · Observação \(1 alerta\)/);
-  assert.match(output, /SETOR\s+STATUS\s+OBJ ALERTAS/);
+  assert.match(output, /03\s+objetos\s+02\s+alertas\s+03\s+setores/);
+  assert.match(output, /INTEGRIDADE\s+▰+▱*\s+8\/8\s+SÉRIES\s+06 ciclos/);
+  assert.match(output, /B2\s+\/\s+ÓRBITA MÉDIA\s+·\s+1 alerta simulado para revisão/);
+  assert.match(output, /SETOR\s+ESTADO\s+OBJ\s+EVT/);
+  assert.match(output, /01\. A1 ÓRBITA BAIXA/);
 });
 
 test("observability provides deterministic samples and descriptive statistics", () => {
@@ -172,7 +173,7 @@ test("color is opt-in and adds only fixed ANSI formatting", () => {
   const plainOutput = renderDashboard();
   const coloredOutput = renderDashboard(true);
   const normalizedColorOutput = coloredOutput
-    .replace(/\u001b\[(?:96|1;96|95|92|2|0)m/g, "")
+    .replace(/\u001b\[(?:96|1;96|95|92|93|36|2|0)m/g, "")
     .split("\n")
     .map((line) => {
       if (/^╭─+╮$/.test(line)) return line.replace(/^╭/, "+").replace(/╮$/, "+").replace(/─/g, "-");
@@ -184,7 +185,7 @@ test("color is opt-in and adds only fixed ANSI formatting", () => {
 
   assert.doesNotMatch(plainOutput, /\u001b/);
   assert.match(coloredOutput, /^\u001b\[96m╭/);
-  assert.match(coloredOutput, /\u001b\[0m\r?\n\u001b\[1;96m│\s+Zion \| Painel do cenário/);
+  assert.match(coloredOutput, /\u001b\[0m\r?\n\u001b\[1;96m│\s+Z I O N\s+\/\s+CENTRO DE CENÁRIO/);
   assert.equal(normalizedColorOutput, plainOutput);
 });
 
@@ -196,8 +197,8 @@ test("dashboard keeps its title and subtitle centered in the panel", () => {
     .map((line) => line.slice(2, -2));
 
   for (const text of [
-    "Zion | Painel do cenário",
-    "Cenário fictício · local · apenas leitura",
+    "Z I O N   /   CENTRO DE CENÁRIO",
+    "workspace local · simulação didática · somente leitura",
   ]) {
     const line = panelLines.find((candidate) => candidate.includes(text));
     assert.ok(line, `expected panel line containing: ${text}`);
@@ -214,9 +215,9 @@ test("dashboard adapts its panel width to terminal size", () => {
     const output = renderDashboard(false, columns);
     const widths = output.split("\n").map((line) => line.length);
 
-    assert.equal(Math.max(...widths), Math.max(56, Math.min(68, columns)));
-    assert.match(output, /Cenário fictício/);
-    assert.match(output, /Zion \| Painel do cenário/);
+    assert.equal(Math.max(...widths), Math.max(60, Math.min(96, columns)));
+    assert.match(output, /simulação didática/);
+    assert.match(output, /Z I O N/);
   }
 });
 

@@ -91,8 +91,10 @@ function frame(lines, useColor = false, options = {}) {
     const padded = `│ ${content} │`;
     if (!useColor) return `| ${content} |`;
     if (index === 0) return colorize(padded, "1;96");
+    if (options.warningLines?.includes(index)) return colorize(padded, "93");
     if (options.accentLines?.includes(index)) return colorize(padded, "95");
     if (options.statusLines?.includes(index)) return colorize(padded, "92");
+    if (options.headingLines?.includes(index)) return colorize(padded, "36");
     if (options.secondaryLines?.includes(index)) return colorize(padded, "2");
     return padded;
   });
@@ -376,44 +378,63 @@ export function renderDashboard(useColor = false, terminalColumns = 80) {
   const safeColumns = Number.isFinite(terminalColumns)
     ? Math.floor(terminalColumns)
     : 80;
-  const width = Math.max(52, Math.min(64, safeColumns - 4));
-  const sectorRows = snapshot.sectors.map((sector) => {
+  const width = Math.max(56, Math.min(92, safeColumns - 4));
+  const sectorRows = snapshot.sectors.map((sector, index) => {
     const objectCount = snapshot.objects.filter(
       (object) => object.sectorId === sector.id,
     ).length;
     const alertCount = snapshot.alerts.filter(
       (alert) => alert.sectorId === sector.id,
     ).length;
-    const name = `${sector.id} ${sector.name}`.padEnd(18);
-    return `${name} ${sector.status.padEnd(12)} ${String(objectCount).padStart(3)} ${String(alertCount).padStart(6)}`;
+    const name = `${String(index + 1).padStart(2, "0")}. ${sector.id} ${sector.name}`;
+    const status = sector.status === "OBSERVAÇÃO" ? "● ATENÇÃO" : "● NOMINAL";
+    const objectBar = "▰".repeat(objectCount) + "▱".repeat(3 - objectCount);
+    return `${name.padEnd(26)}${status.padEnd(13)} ${objectBar}  ${String(alertCount).padStart(2, "0")} ev.`;
   });
   const observedSector = snapshot.sectors.find(({ status }) => status === "OBSERVAÇÃO");
   const observedAlertCount = snapshot.alerts.filter(
     ({ sectorId }) => sectorId === observedSector?.id,
   ).length;
   const lines = [
-    "Zion | Painel do cenário",
-    "Cenário fictício · local · apenas leitura",
+    "Z I O N   /   CENTRO DE CENÁRIO",
+    "workspace local · simulação didática · somente leitura",
     "",
-    "RESUMO",
-    `OBJETOS ${String(snapshot.objects.length).padStart(2, "0")}  |  ALERTAS ${String(snapshot.alerts.length).padStart(2, "0")}  |  SETORES ${String(snapshot.sectors.length).padStart(2, "0")}`,
-    `INTEGRIDADE ${analysis.passed}/${analysis.total}  |  SÉRIES ${String(observability.cycles.length).padStart(2, "0")} CICLOS`,
+    "VISÃO GERAL",
+    `  ${String(snapshot.objects.length).padStart(2, "0")}  objetos      ${String(snapshot.alerts.length).padStart(2, "0")}  alertas      ${String(snapshot.sectors.length).padStart(2, "0")}  setores`,
+    `  INTEGRIDADE  ${"▰".repeat(analysis.passed)}${"▱".repeat(analysis.total - analysis.passed)}  ${analysis.passed}/${analysis.total}      SÉRIES  ${String(observability.cycles.length).padStart(2, "0")} ciclos`,
     "",
-    "SETORES",
-    "SETOR              STATUS       OBJ ALERTAS",
+    "SETORES MONITORADOS",
+    "SETOR                      ESTADO       OBJ  EVT",
     ...sectorRows,
     "",
+    "LEITURA EM DESTAQUE",
     observedSector
-      ? `FOCO: ${observedSector.id} · Observação (${observedAlertCount} alerta${observedAlertCount === 1 ? "" : "s"})`
-      : "FOCO: Nenhum setor em observação",
+      ? width < 68
+        ? `  ${observedSector.id} · ${observedAlertCount} alerta(s) simulado(s)`
+        : `  ${observedSector.id}  /  ${observedSector.name}   ·   ${observedAlertCount} alerta simulado para revisão`
+      : "  Nenhum setor marcado para observação",
     "",
-    "Sem telemetria ou ações externas.",
+    width < 68
+      ? "DEMO LOCAL · SEM TELEMETRIA · SEM AÇÕES EXTERNAS"
+      : "DADOS FICTÍCIOS   ·   SEM TELEMETRIA   ·   SEM AÇÕES EXTERNAS",
   ];
+
+  const sectionLines = lines.flatMap((line, index) =>
+    ["VISÃO GERAL", "SETORES MONITORADOS", "LEITURA EM DESTAQUE"].includes(line)
+      ? [index]
+      : [],
+  );
+  const warningLines = observedSector
+    ? [lines.findIndex((line) => line.startsWith(`  ${observedSector.id} `))]
+    : [];
 
   return frame(lines, useColor, {
     width,
     centerLines: [0, 1],
-    secondaryLines: [1, 3, 7, lines.length - 2, lines.length - 1],
+    headingLines: sectionLines,
+    statusLines: [4],
+    warningLines,
+    secondaryLines: [1, lines.length - 1],
   });
 }
 
