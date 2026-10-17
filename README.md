@@ -85,11 +85,12 @@ Pressionar Enter sem texto na confirmação de uma tela retorna ao painel; o
 cancelamento do prompt continua sendo tratado separadamente.
 
 A suíte de segurança verifica entradas hostis e extensas no menu, floods de
-entradas, tentativas de injeção ANSI/OSC, caracteres de controle nas telas e
-limites de dimensões do terminal. Ela é descoberta por `npm test` e executada
-no CI para cada versão suportada do Node.js. Esses testes são verificações
-automatizadas de regressão, não uma certificação ou auditoria de segurança
-independente.
+entradas, tentativas de injeção ANSI/OSC, caracteres de controle nas telas,
+limites de dimensões do terminal, sigilo e limites da entrada interativa. Uma
+suíte de observabilidade testa o resumo compacto por grupo do runner. Essas
+suítes são descobertas por `npm test` e executadas no CI para cada versão
+suportada do Node.js. São verificações automatizadas de regressão, não uma
+certificação ou auditoria de segurança independente.
 
 ## Segurança
 
