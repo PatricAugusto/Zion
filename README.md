@@ -23,7 +23,7 @@ princípios de segurança:
 | `4` | Comparativo e contagens por setor |
 | `5` | Resumo dos rótulos dos alertas fictícios |
 | `6` | Princípios e limites de segurança |
-| `7` | Séries de observabilidade sintéticas |
+| `7` | Painel minimalista das séries de observabilidade |
 | `8` | Leitura guiada e estatísticas descritivas |
 | `9` | Registro de eventos da sessão atual |
 | `a` | Administração do Creator (contas e auditoria) |

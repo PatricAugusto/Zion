@@ -189,28 +189,38 @@ export function analyzeObservability() {
 
 export function renderObservability(useColor = false) {
   const analysis = analyzeObservability();
+  const seriesNames = new Map([
+    ["records", "REGISTROS"],
+    ["events", "EVENTOS"],
+    ["completeness", "PREENCHIMENTO"],
+  ]);
   const lines = [
-    "OBSERVABILIDADE DO CENÁRIO",
-    `${analysis.source}  •  ${analysis.cycleCount} CICLOS RELATIVOS`,
+    "PAINEL DE OBSERVABILIDADE",
+    `${analysis.source}  ·  ${analysis.cycleCount} CICLOS`,
     "",
-    "SÉRIE                         VALORES                  MÍN / MÉD / MÁX",
-    ...analysis.series.map((series) => {
-      const values = series.values.join(", ");
+    `CICLOS  ${analysis.cycles.join("   ")}`,
+    "",
+    ...analysis.series.flatMap((series, index) => {
       const mean = Number.isInteger(series.mean)
         ? String(series.mean)
         : series.mean.toFixed(1);
-      const stats = `${series.minimum} / ${mean} / ${series.maximum} ${series.unit}`;
-      return `${series.label.padEnd(30)} ${sparkline(series.values)} ${values.padEnd(19)} ${stats}`;
+      const change = series.change > 0 ? `+${series.change}` : String(series.change);
+      return [
+        `${String(index + 1).padStart(2, "0")}  ${seriesNames.get(series.key)}  ·  ${series.unit}`,
+        `    ${sparkline(series.values)}`,
+        `    ${series.values.join("    ")}`,
+        `    mín ${series.minimum}   ·   média ${mean}   ·   máx ${series.maximum}   ·   Δ ${change}`,
+        "",
+      ];
     }),
-    "",
-    `CICLOS: ${analysis.cycles.join(" → ")}`,
-    "Barras mostram variação relativa dentro de cada série, não escala comum.",
-    "Os dados são fixos e não representam telemetria, órbitas ou sistemas reais.",
+    "Barras relativas à própria série; compare valores, não comprimentos.",
+    "Amostra fixa e didática; não é telemetria nem métrica física.",
   ];
 
   return frame(lines, useColor, {
-    centerLines: [0, 1, 7, 8, 9],
     accentLines: [1],
+    headingLines: [3, 5, 10, 15],
+    secondaryLines: [lines.length - 2, lines.length - 1],
   });
 }
 

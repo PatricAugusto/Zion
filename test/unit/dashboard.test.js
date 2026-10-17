@@ -64,12 +64,16 @@ test("observability provides deterministic samples and descriptive statistics", 
 test("observability screen explains that series are synthetic and have distinct scales", () => {
   const output = renderObservability();
 
-  assert.match(output, /OBSERVABILIDADE DO CENÁRIO/);
+  assert.match(output, /PAINEL DE OBSERVABILIDADE/);
   assert.match(output, /SÉRIE DIDÁTICA FIXA/);
   assert.match(output, /registros\/ciclo/);
   assert.match(output, /eventos\/ciclo/);
-  assert.match(output, /não escala comum/);
-  assert.match(output, /não representam telemetria, órbitas ou sistemas reais/);
+  assert.match(output, /12\s+15\s+14\s+18\s+17\s+21/);
+  assert.match(output, /1\s+0\s+2\s+1\s+0\s+2/);
+  assert.match(output, /mín 12\s+·\s+média 16\.2\s+·\s+máx 21\s+·\s+Δ \+9/);
+  assert.match(output, /Barras relativas à própria série; compare valores, não comprimentos/);
+  assert.match(output, /Amostra fixa e didática; não é telemetria nem métrica física/);
+  assert.doesNotMatch(output, /SÉRIE\s+VALORES\s+MÍN/);
 });
 
 test("guided reading explains descriptive statistics without predictive claims", () => {

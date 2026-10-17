@@ -28,7 +28,7 @@ describe("Zion CLI integration tests", () => {
     assert.match(result.stdout, /ANÁLISE COMPARATIVA DE SETORES/);
     assert.match(result.stdout, /RESUMO DE ALERTAS SIMULADOS/);
     assert.match(result.stdout, /PRINCÍPIOS DE SEGURANÇA DO ZION/);
-    assert.match(result.stdout, /OBSERVABILIDADE DO CENÁRIO/);
+    assert.match(result.stdout, /PAINEL DE OBSERVABILIDADE/);
     assert.match(result.stdout, /LEITURA GUIADA DAS SÉRIES/);
     assert.match(result.stdout, /REGISTRO DE SESSÃO LOCAL/);
     assert.match(result.stdout, /AUDITORIA LOCAL/);
