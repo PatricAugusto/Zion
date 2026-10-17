@@ -139,26 +139,32 @@ test("alert view labels alerts as simulated", () => {
   const output = renderAlerts();
 
   assert.match(output, /ALERTAS DO CENÁRIO SIMULADO/);
-  assert.match(output, /NÍVEIS VISUAIS FICTÍCIOS — NÃO REPRESENTAM RISCO REAL/);
-  assert.match(output, /EVT-01.*NORMAL/);
-  assert.match(output, /EVT-02.*ATENÇÃO/);
-  assert.match(output, /EVT-03.*CRÍTICO/);
-  assert.match(output, /crítico = revisar já · atenção = observar · normal = cenário estável/);
-  assert.match(output, /não representam eventos ou condições espaciais reais/);
-  assert.match(renderAlerts(true), /\u001b\[91m.*EVT-03.*CRÍTICO/);
-  assert.match(renderAlerts(true), /\u001b\[93m.*EVT-02.*ATENÇÃO/);
-  assert.match(renderAlerts(true), /\u001b\[92m.*EVT-01.*NORMAL/);
+  assert.match(output, /PRIORIDADE VISUAL\s+·\s+FICTÍCIA/);
+  assert.match(output, /NÍVEL\s+ID\s+SETOR\s+RESUMO/);
+  assert.match(output, /CRÍTICO\s+EVT-03\s+B2/);
+  assert.match(output, /ATENÇÃO\s+EVT-02\s+B2/);
+  assert.match(output, /NORMAL\s+EVT-01\s+GERAL/);
+  assert.ok(output.indexOf("EVT-03") < output.indexOf("EVT-02"));
+  assert.ok(output.indexOf("EVT-02") < output.indexOf("EVT-01"));
+  assert.match(output, /CRÍTICO revisar\s+·\s+ATENÇÃO observar\s+·\s+NORMAL estável/);
+  assert.match(output, /Cenário didático; não representa risco ou evento real/);
+  const coloredOutput = renderAlerts(true);
+  assert.match(coloredOutput, /\u001b\[91m.*CRÍTICO.*EVT-03/);
+  assert.match(coloredOutput, /\u001b\[93m.*ATENÇÃO.*EVT-02/);
+  assert.match(coloredOutput, /\u001b\[92m.*NORMAL.*EVT-01/);
 });
 
 test("alert analysis summarizes synthetic labels without implying real severity", () => {
   const output = renderAlertAnalysis();
 
   assert.match(output, /RESUMO DE ALERTAS SIMULADOS/);
-  assert.match(output, /CRÍTICO\s+1 registro\(s\)/);
-  assert.match(output, /ATENÇÃO\s+1 registro\(s\)/);
-  assert.match(output, /NORMAL\s+1 registro\(s\)/);
-  assert.match(output, /TOTAL DE REGISTROS: 3/);
-  assert.match(output, /exemplos visuais fictícios, sem ameaça real/);
+  assert.match(output, /CONTAGEM POR PRIORIDADE VISUAL/);
+  assert.match(output, /PRIORIDADE\s+REGISTROS/);
+  assert.match(output, /CRÍTICO\s+1/);
+  assert.match(output, /ATENÇÃO\s+1/);
+  assert.match(output, /NORMAL\s+1/);
+  assert.match(output, /TOTAL\s+3\s+·\s+CRÍTICOS\s+1\s+·\s+ATENÇÃO\s+1/);
+  assert.match(output, /Prioridades fictícias; não representam risco real/);
 });
 
 test("integrity analysis validates local data structure, not space conditions", () => {

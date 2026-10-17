@@ -575,24 +575,36 @@ export function renderAlerts(useColor = false) {
     ATENÇÃO: "● ATENÇÃO",
     NORMAL: "● NORMAL",
   };
+  const orderedAlerts = [...snapshot.alerts].sort(
+    (left, right) =>
+      ALERT_LEVEL_ORDER.indexOf(left.level) - ALERT_LEVEL_ORDER.indexOf(right.level),
+  );
+  const alertTable = renderTable(
+    ["NÍVEL", "ID", "SETOR", "RESUMO"],
+    orderedAlerts.map((alert) => [
+      levelLabels[alert.level],
+      alert.id,
+      alert.sectorId ?? "GERAL",
+      alert.message,
+    ]),
+  );
   const criticalLines = [];
   const warningLines = [];
   const statusLines = [];
-  const alertLines = snapshot.alerts.map((alert, index) => {
-    const lineIndex = 3 + index * 2;
+  orderedAlerts.forEach((alert, index) => {
+    const lineIndex = 4 + index;
     if (alert.level === "CRÍTICO") criticalLines.push(lineIndex);
     else if (alert.level === "ATENÇÃO") warningLines.push(lineIndex);
     else statusLines.push(lineIndex);
-    return `[${alert.id}] ${levelLabels[alert.level]}  ${alert.message}`;
   });
   const lines = [
     "ALERTAS DO CENÁRIO SIMULADO",
-    "NÍVEIS VISUAIS FICTÍCIOS — NÃO REPRESENTAM RISCO REAL",
+    "PRIORIDADE VISUAL  ·  FICTÍCIA",
     "",
-    ...alertLines.flatMap((line) => [line, ""]),
-    "LEITURA RÁPIDA: crítico = revisar já · atenção = observar · normal = cenário estável",
+    ...alertTable,
     "",
-    "Exemplos didáticos; não representam eventos ou condições espaciais reais.",
+    "CRÍTICO revisar  ·  ATENÇÃO observar  ·  NORMAL estável",
+    "Cenário didático; não representa risco ou evento real.",
   ];
 
   return frame(lines, useColor, {
@@ -609,23 +621,26 @@ export function renderAlertAnalysis(useColor = false) {
     level,
     count: snapshot.alerts.filter((alert) => alert.level === level).length,
   }));
+  const summaryTable = renderTable(
+    ["PRIORIDADE", "REGISTROS"],
+    counts.map(({ level, count }) => [level, count]),
+  );
   const lines = [
     "RESUMO DE ALERTAS SIMULADOS",
-    "DISTRIBUIÇÃO DIDÁTICA POR PRIORIDADE VISUAL",
+    "CONTAGEM POR PRIORIDADE VISUAL",
     "",
-    ...counts.map(({ level, count }) => `${level.padEnd(9)} ${count} registro(s)`),
+    ...summaryTable,
     "",
-    `TOTAL DE REGISTROS: ${snapshot.alerts.length}`,
-    "CRÍTICO e ATENÇÃO são exemplos visuais fictícios, sem ameaça real.",
-    "Use a cor como reforço; o texto mantém o significado sem ANSI.",
+    `TOTAL  ${snapshot.alerts.length}  ·  CRÍTICOS  ${counts[0].count}  ·  ATENÇÃO  ${counts[1].count}`,
+    "Prioridades fictícias; não representam risco real.",
   ];
 
   return frame(lines, useColor, {
-    centerLines: [0, 1, lines.length - 2, lines.length - 1],
+    centerLines: [0, 1, lines.length - 1],
     accentLines: [1],
-    criticalLines: [3],
-    warningLines: [4],
-    statusLines: [5],
+    criticalLines: [4],
+    warningLines: [5],
+    statusLines: [6],
   });
 }
 
