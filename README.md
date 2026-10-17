@@ -5,7 +5,8 @@ consciência e segurança espacial em um ambiente demonstrativo.
 
 ## Executar
 
-Requer Node.js 20 ou superior. O projeto não tem dependências externas.
+Requer Node.js 20 ou superior e npm. A persistência local usa SQLite por meio
+do Prisma.
 
 ```powershell
 npm start
@@ -25,6 +26,7 @@ princípios de segurança:
 | `7` | Séries de observabilidade sintéticas |
 | `8` | Leitura guiada e estatísticas descritivas |
 | `9` | Registro de eventos da sessão atual |
+| `a` | Administração do Creator (contas e auditoria) |
 | `q` | Sair |
 
 Para executar os testes:
@@ -35,12 +37,7 @@ npm test
 
 O comando principal abre o console de testes do Zion, depois usa o test runner
 nativo do Node.js para descobrir automaticamente todos os arquivos `*.test.js`
-dentro de `test/`. O relatório detalhado original e o código de falha são
-preservados:
-
-```powershell
-npm test
-```
+dentro de `test/`. O relatório detalhado e o código de falha são preservados.
 
 As camadas também podem ser executadas separadamente:
 
@@ -72,26 +69,57 @@ independente.
 
 O fluxo de CI em `.github/workflows/ci.yml` executa testes unitários e de
 integração no Node.js 20, 22 e 24 e verifica dependências com `npm audit`.
-O projeto não possui dependências de terceiros. Para repetir a auditoria local:
+Para repetir a auditoria local:
 
 ```powershell
 npm run security:audit
 ```
 
+### Contas e acesso
+
+Na primeira execução, o Zion solicita uma senha e confirmação para provisionar
+a conta reservada `Creator`, com papel `MASTER`. A senha deve ter de 12 a 128
+caracteres; é armazenado apenas um hash scrypt com salt aleatório. Não há senha
+padrão, cadastro público ou credencial incluída no repositório. Em terminal
+interativo, a senha não é exibida enquanto é digitada.
+
+Nas execuções seguintes, todos os usuários precisam autenticar. Somente
+`Creator` pode criar contas comuns, listar contas e consultar a auditoria pelo
+menu de administração. Identificadores são normalizados e validados; a senha
+não é registrada em logs. A autenticação rejeita credenciais com mensagem
+genérica e bloqueia a conta por 15 minutos após cinco falhas.
+
+### Banco de dados e auditoria
+
+O SQLite local fica em `data/zion.db`, ignorado pelo Git. As migrações versionadas
+em `prisma/migrations/` são aplicadas automaticamente pelo `npm start`; também
+podem ser aplicadas com `npm run db:migrate`. Para criar uma nova migração de
+desenvolvimento, use `npm run db:migrate:dev -- --name nome-da-migracao`.
+O cliente Prisma é gerado no `npm install`.
+
+Criação de conta e evento de auditoria são gravados na mesma transação, assim
+uma falha ao registrar o evento também desfaz a criação. A auditoria persistente
+mantém no máximo 10.000 eventos e o Admin Master pode consultar os 30 mais
+recentes. Os eventos usam ações predefinidas, sem senha ou texto livre.
+
+SQLite oferece transações ACID para os dados locais deste CLI; isso não substitui
+backup, criptografia do disco, controles do sistema operacional ou alta
+disponibilidade. O banco não é compartilhado em rede e não transforma o Zion
+em um serviço multiusuário remoto.
+
 O menu aceita somente as opções documentadas; escolhas inválidas, inclusive
 nomes de propriedades herdadas do JavaScript, não selecionam telas. Cores ANSI
-são desativadas fora de um terminal interativo. O `.gitignore` exclui arquivos
-de ambiente e artefatos locais comuns.
+são desativadas fora de um terminal interativo. O `.gitignore` exclui o banco,
+arquivos de ambiente e artefatos locais comuns.
 
 Dez escolhas inválidas consecutivas encerram o processo com aviso explícito;
-abrir uma tela válida zera o contador. Como o Zion não oferece autenticação nem
-serviço de rede, esse controle protege o loop do terminal contra repetição
-excessiva, mas não é um mecanismo anti-DDoS distribuído.
+abrir uma tela válida zera o contador. O limite protege o loop do terminal
+contra repetição excessiva, mas não é um mecanismo anti-DDoS distribuído.
 
 O registro da opção `9` mantém até 50 eventos em memória durante a sessão atual.
-Ele usa rótulos fixos para início, telas abertas, opções inválidas e encerramento;
-o texto digitado pelo usuário não é armazenado. Os eventos são descartados ao
-fechar o processo e não constituem auditoria persistente.
+O menu Admin Master oferece também uma auditoria persistente de autenticações,
+abertura de telas, criação de contas e encerramento. Nenhum dos registros
+armazena o texto digitado ou senhas.
 
 As análises verificam a integridade estrutural e exibem contagens do conjunto
 fictício local. Não estimam órbitas, colisões, trajetórias, riscos ou estados
@@ -112,8 +140,7 @@ métricas físicas.
 ## Limites desta versão
 
 Todos os setores, objetos e alertas são fictícios. O Zion não recebe telemetria,
-não consulta dados orbitais e não envia comandos a sistemas externos. O mapa é
-esquemático e não está em escala.
+não consulta dados orbitais e não envia comandos a sistemas externos.
 
 O painel prioriza os indicadores e as contagens por setor. Os gráficos
 decorativos foram removidos para reduzir ruído visual e deixar os dados

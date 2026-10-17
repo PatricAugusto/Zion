@@ -83,9 +83,13 @@ function renderResults(summary) {
   const progress = "#".repeat(passSlots) +
     "!".repeat(failedSlots) +
     ".".repeat(30 - passSlots - failedSlots);
+  const suiteNameWidth = Math.max(
+    "GRUPO".length,
+    ...summary.suites.map(({ name }) => name.length),
+  );
   const suiteRows = summary.suites.map(
     ({ name, passed, failed, skipped }) =>
-      `${name.padEnd(34)} ${String(passed).padStart(6)} ${String(failed).padStart(7)} ${String(skipped).padStart(7)}`,
+      `${name.padEnd(suiteNameWidth)} ${String(passed).padStart(6)} ${String(failed).padStart(7)} ${String(skipped).padStart(7)}`,
   );
   const lines = [
     "VISÃO GERAL DOS TESTES",
@@ -94,7 +98,7 @@ function renderResults(summary) {
     `APROVAÇÃO [${progress}] ${Math.round(passRatio * 100)}%`,
     "",
     "RESULTADOS POR GRUPO",
-    `GRUPO${" ".repeat(29)} PASSOU FALHOU IGNOR.`,
+    `${"GRUPO".padEnd(suiteNameWidth)} PASSOU FALHOU IGNOR.`,
     ...suiteRows,
     "",
     `DURAÇÃO ${(summary.durationMs / 1000).toFixed(2)} s`,

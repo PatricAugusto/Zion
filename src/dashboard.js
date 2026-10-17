@@ -263,6 +263,55 @@ export function renderSessionLog(
   });
 }
 
+export function renderAdminUsers(users, useColor = false) {
+  const safeText = (value) =>
+    String(value).replace(/[\u0000-\u001f\u007f-\u009f\u001b\u202a-\u202e\u2066-\u2069]/g, "?");
+  const lines = [
+    "CONTAS LOCAIS",
+    "IDENTIDADE E ESTADO DE ACESSO",
+    "",
+    "USUÁRIO                         PAPEL       ESTADO",
+    ...(users.length === 0
+      ? ["Nenhuma conta cadastrada."]
+      : users.map(({ username, role, isActive, lockedUntil }) => {
+          const state = !isActive
+            ? "INATIVA"
+            : lockedUntil && lockedUntil > new Date()
+              ? "BLOQUEADA"
+              : "ATIVA";
+          return `${safeText(username).padEnd(32)}${safeText(role).padEnd(12)}${state}`;
+        })),
+    "",
+    "Senhas não são exibidas; bloqueios são temporários.",
+  ];
+  return frame(lines, useColor, {
+    centerLines: [0, 1, lines.length - 1],
+    accentLines: [1],
+  });
+}
+
+export function renderAuditEntries(entries, useColor = false) {
+  const safeText = (value) =>
+    String(value).replace(/[\u0000-\u001f\u007f-\u009f\u001b\u202a-\u202e\u2066-\u2069]/g, "?");
+  const lines = [
+    "AUDITORIA LOCAL",
+    "EVENTOS RECENTES · SOMENTE LEITURA",
+    "",
+    "DATA UTC                   USUÁRIO       EVENTO",
+    ...(entries.length === 0
+      ? ["Nenhum evento registrado."]
+      : entries.map(({ createdAt, actor, action }) =>
+          `${new Date(createdAt).toISOString()}  ${safeText(actor).padEnd(13)} ${safeText(action)}`,
+        )),
+    "",
+    "Retenção local sem conteúdo de senha ou texto livre.",
+  ];
+  return frame(lines, useColor, {
+    centerLines: [0, 1, lines.length - 1],
+    accentLines: [1],
+  });
+}
+
 export function renderSectorAnalysis(useColor = false) {
   const lines = [
     "ANÁLISE COMPARATIVA DE SETORES",

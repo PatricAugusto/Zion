@@ -4,3 +4,7 @@ coverage/
 .env.*
 !.env.example
 npm-debug.log*
+data/*.db
+data/*.db-journal
+data/*.db-shm
+data/*.db-wal

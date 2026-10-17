@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String      @id @default(cuid())
+  username              String      @unique
+  passwordHash          String
+  role                  String      @default("USER")
+  isActive              Boolean     @default(true)
+  failedLoginAttempts   Int         @default(0)
+  lockedUntil           DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  auditEntries          AuditEntry[]
+
+  @@index([role, isActive])
+}
+
+model AuditEntry {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String
+  createdAt DateTime @default(now())
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+}

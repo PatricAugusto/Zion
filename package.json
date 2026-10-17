@@ -5,12 +5,25 @@
   "description": "Painel de terminal para simulacao de consciencia espacial",
   "type": "module",
   "scripts": {
-    "start": "node src/main.js",
+    "start": "node scripts/prisma-command.js migrate deploy && node src/main.js",
     "test": "node scripts/run-tests.js",
-    "test:unit": "node --test --test-reporter=spec test/unit/dashboard.test.js test/unit/menu-guard.test.js test/unit/session-log.test.js",
-    "test:integration": "node --test --test-reporter=spec test/integration/cli.test.js",
+    "test:unit": "node --test --test-reporter=spec test/unit/dashboard.test.js test/unit/menu-guard.test.js test/unit/session-log.test.js test/unit/auth.test.js",
+    "test:integration": "node --test --test-reporter=spec test/integration/cli.test.js test/integration/database.test.js",
     "test:security": "node --test --test-reporter=spec test/security/security.test.js",
-    "security:audit": "npm audit --audit-level=high"
+    "security:audit": "npm audit --audit-level=high",
+    "db:migrate": "node scripts/prisma-command.js migrate deploy",
+    "db:migrate:dev": "node scripts/prisma-command.js migrate dev",
+    "db:generate": "prisma generate",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.0"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.2"
   },
   "engines": {
     "node": ">=20"

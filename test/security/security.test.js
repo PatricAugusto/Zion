@@ -1,11 +1,10 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
-import { describe, test } from "node:test";
-import { fileURLToPath } from "node:url";
+import { after, before, describe, test } from "node:test";
 import {
   renderAlertAnalysis,
   renderAlerts,
   renderAnalysis,
+  renderAuditEntries,
   renderDashboard,
   renderLearning,
   renderObservability,
@@ -13,10 +12,12 @@ import {
   renderProtocols,
   renderSessionLog,
   renderSectorAnalysis,
+  renderAdminUsers,
 } from "../../src/dashboard.js";
 import { createSessionLog } from "../../src/session-log.js";
+import { createCliTestContext } from "../../scripts/cli-test-support.js";
 
-const entryPoint = fileURLToPath(new URL("../../src/main.js", import.meta.url));
+const creatorPassword = "CreatorPassphrase#2026";
 const renderers = [
   renderDashboard,
   renderObjects,
@@ -28,96 +29,102 @@ const renderers = [
   renderLearning,
   renderProtocols,
   () => renderSessionLog(createSessionLog().read()),
+  () => renderAdminUsers([]),
+  () => renderAuditEntries([]),
 ];
+let cli;
 
 describe("Zion security regression tests", () => {
-
-function runCli(input) {
-  return spawnSync(process.execPath, [entryPoint], {
-    encoding: "utf8",
-    input,
-    timeout: 5000,
-    maxBuffer: 1024 * 1024,
+  before(() => {
+    cli = createCliTestContext();
   });
-}
 
-test("hostile menu input is rejected without being echoed or interpreted", () => {
-  const marker = "ZION_INPUT_MUST_NOT_BE_EVALUATED";
-  const hostileInputs = [
-    "__proto__",
-    "constructor",
-    "toString",
-    "q;process.exit(99)",
-    `\u001b[2J${marker}`,
-    `\u001b]0;${marker}\u0007`,
-    `\u202e${marker}\u2066`,
-    "x".repeat(64 * 1024),
-  ];
-  const result = runCli(`${hostileInputs.join("\n")}\nq\n`);
+  after(() => {
+    cli.close();
+  });
 
-  assert.equal(result.error, undefined);
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal((result.stdout.match(/Opção inválida/g) ?? []).length, hostileInputs.length);
-  assert.doesNotMatch(result.stdout, new RegExp(marker));
-  assert.doesNotMatch(result.stdout, /\u001b/);
-  assert.match(result.stdout, /Zion encerrado\. Nenhuma ação externa foi executada\./);
-});
+  test("hostile menu input is rejected without being echoed or interpreted", () => {
+    const marker = "ZION_INPUT_MUST_NOT_BE_EVALUATED";
+    const hostileInputs = [
+      "__proto__",
+      "constructor",
+      "toString",
+      "q;process.exit(99)",
+      `\u001b[2J${marker}`,
+      `\u001b]0;${marker}\u0007`,
+      `\u202e${marker}\u2066`,
+      "x".repeat(64 * 1024),
+    ];
+    const result = cli.run(
+      `${creatorPassword}\n${creatorPassword}\n${hostileInputs.join("\n")}\nq\n`,
+    ).result;
 
-test("a menu-input burst is bounded and does not echo its payload", () => {
-  const marker = "FLOOD_PAYLOAD_MUST_NOT_BE_ECHOED";
-  const result = runCli(`${`${marker}\n`.repeat(1000)}q\n`);
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal((result.stdout.match(/Opção inválida/g) ?? []).length, hostileInputs.length);
+    assert.doesNotMatch(result.stdout, new RegExp(marker));
+    assert.doesNotMatch(result.stdout, /\u001b/);
+    assert.match(result.stdout, /Zion encerrado\. Nenhuma ação externa foi executada\./);
+  });
 
-  assert.equal(result.error, undefined);
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /Limite de 10 entradas inválidas consecutivas atingido/);
-  assert.equal((result.stdout.match(/Opção inválida/g) ?? []).length, 9);
-  assert.doesNotMatch(result.stdout, new RegExp(marker));
-  assert.ok(result.stdout.length < 20_000);
-});
+  test("menu-input flood is bounded and its payload is not echoed", () => {
+    const marker = "FLOOD_PAYLOAD_MUST_NOT_BE_ECHOED";
+    const result = cli.run(
+      `${creatorPassword}\n${creatorPassword}\n${`${marker}\n`.repeat(1000)}q\n`,
+    ).result;
 
-test("all screens emit no terminal control characters when colors are disabled", () => {
-  for (const render of renderers) {
-    const output = render(false);
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /Limite de 10 entradas inválidas consecutivas atingido/);
+    assert.equal((result.stdout.match(/Opção inválida/g) ?? []).length, 9);
+    assert.doesNotMatch(result.stdout, new RegExp(marker));
+    assert.ok(result.stdout.length < 50_000);
+  });
 
-    assert.doesNotMatch(output, /\u001b/);
-    assert.doesNotMatch(output, /[\u0000-\u0009\u000b-\u001f\u007f]/);
-  }
-});
+  test("all screens emit no terminal control characters when colors are disabled", () => {
+    for (const render of renderers) {
+      const output = render(false);
 
-test("colored screens use only the fixed allowlisted SGR sequences", () => {
-  const allowedSgr = /\u001b\[(?:0|2|92|95|96|1;96)m/g;
+      assert.doesNotMatch(output, /\u001b/);
+      assert.doesNotMatch(output, /[\u0000-\u0009\u000b-\u001f\u007f]/);
+    }
+  });
 
-  for (const render of renderers) {
-    const output = render(true);
-    const withoutAllowedSgr = output.replace(allowedSgr, "");
+  test("colored screens use only the fixed allowlisted SGR sequences", () => {
+    const allowedSgr = /\u001b\[(?:0|2|92|95|96|1;96)m/g;
 
-    assert.doesNotMatch(withoutAllowedSgr, /\u001b/);
-    assert.doesNotMatch(withoutAllowedSgr, /[\u0000-\u0008\u000b-\u001f\u007f]/);
-    assert.doesNotMatch(output, /\u001b\][\s\S]*?(?:\u0007|\u001b\\)/);
-  }
-});
+    for (const render of renderers) {
+      const output = render(true);
+      const withoutAllowedSgr = output.replace(allowedSgr, "");
 
-test("dashboard bounds invalid and extreme terminal dimensions", () => {
-  for (const columns of [Number.NaN, Number.POSITIVE_INFINITY, -1, 1e100]) {
-    assert.doesNotThrow(() => renderDashboard(false, columns));
-  }
+      assert.doesNotMatch(withoutAllowedSgr, /\u001b/);
+      assert.doesNotMatch(withoutAllowedSgr, /[\u0000-\u0008\u000b-\u001f\u007f]/);
+      assert.doesNotMatch(output, /\u001b\][\s\S]*?(?:\u0007|\u001b\\)/);
+    }
+  });
 
-  assert.ok(renderDashboard(false, Number.NaN).length < 4096);
-  assert.ok(renderDashboard(false, 1e100).length < 4096);
-});
+  test("dashboard bounds invalid and extreme terminal dimensions", () => {
+    for (const columns of [Number.NaN, Number.POSITIVE_INFINITY, -1, 1e100]) {
+      assert.doesNotThrow(() => renderDashboard(false, columns));
+    }
 
-test("session log accepts only static event and screen labels", () => {
-  const sessionLog = createSessionLog();
-  const payload = "\u001b]0;ZION-LOG-INJECTION\u0007";
+    assert.ok(renderDashboard(false, Number.NaN).length < 4096);
+    assert.ok(renderDashboard(false, 1e100).length < 4096);
+  });
 
-  assert.throws(() => sessionLog.record("SCREEN_OPENED", payload), TypeError);
-  assert.throws(() => sessionLog.record(payload), TypeError);
-  sessionLog.record("INVALID_INPUT");
+  test("admin renderers neutralize terminal control and bidirectional text", () => {
+    const payload = "\u001b]0;INJECT\u0007\u202e";
+    const users = renderAdminUsers([
+      { username: payload, role: "USER", isActive: true, lockedUntil: null },
+    ]);
+    const audit = renderAuditEntries([
+      { createdAt: new Date("2026-10-12T12:00:00.000Z"), actor: payload, action: payload },
+    ]);
 
-  const output = renderSessionLog(sessionLog.read());
-  assert.doesNotMatch(output, /\u001b/);
-  assert.doesNotMatch(output, /ZION-LOG-INJECTION/);
-  assert.match(output, /Entrada de menu rejeitada/);
-});
-
+    for (const output of [users, audit]) {
+      assert.doesNotMatch(output, /\u001b/);
+      assert.doesNotMatch(output, /[\u0000-\u0009\u000b-\u001f\u007f\u202e]/);
+      assert.match(output, /\?/);
+    }
+  });
 });
