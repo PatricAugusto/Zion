@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
 import { PrismaClient } from "@prisma/client";
 import {
+  authenticate,
   createUser,
   ensureCreatorAccount,
   listAuditEntries,
@@ -140,6 +141,120 @@ describe("Zion SQLite persistence and transaction tests", () => {
       assert.ok(await prisma.auditEntry.findUnique({ where: { id: newestAuditEntry.id } }));
     } finally {
       await prisma.$disconnect();
+    }
+  });
+
+  test("simultaneous first-run bootstraps create exactly one Creator account", async () => {
+    const databaseUrl = context.createDatabaseUrl();
+    const prisma = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
+    const secondPrisma = new PrismaClient({
+      datasources: { db: { url: databaseUrl } },
+    });
+    await prisma.$connect();
+    await secondPrisma.$connect();
+
+    try {
+      const results = await Promise.allSettled(
+        Array.from({ length: 4 }, (_, index) =>
+          ensureCreatorAccount(index % 2 === 0 ? prisma : secondPrisma, {
+            password: creatorPassword,
+            confirmPassword: creatorPassword,
+          }),
+        ),
+      );
+      const successfulSetups = results.filter(
+        (result) => result.status === "fulfilled" && result.value === true,
+      );
+
+      assert.equal(successfulSetups.length, 1);
+      assert.equal(await prisma.user.count({ where: { role: "MASTER" } }), 1);
+      assert.equal(await prisma.user.count(), 1);
+      assert.equal(await prisma.auditEntry.count(), 1);
+    } finally {
+      await prisma.$disconnect();
+      await secondPrisma.$disconnect();
+    }
+  });
+
+  test("parallel duplicate account requests preserve unique username constraint", async () => {
+    const databaseUrl = context.createDatabaseUrl();
+    const prisma = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
+    const secondPrisma = new PrismaClient({
+      datasources: { db: { url: databaseUrl } },
+    });
+    await prisma.$connect();
+    await secondPrisma.$connect();
+
+    try {
+      await ensureCreatorAccount(prisma, {
+        password: creatorPassword,
+        confirmPassword: creatorPassword,
+      });
+      const creator = await prisma.user.findUnique({ where: { username: "creator" } });
+      const results = await Promise.allSettled(
+        Array.from({ length: 4 }, (_, index) =>
+          createUser(
+            index % 2 === 0 ? prisma : secondPrisma,
+            { id: creator.id, role: "MASTER" },
+            "parallel-user",
+            "ParallelUserPassphrase#2026",
+            "ParallelUserPassphrase#2026",
+          ),
+        ),
+      );
+
+      assert.equal(results.filter(({ status }) => status === "fulfilled").length, 1);
+      assert.equal(
+        results.filter(
+          (result) => result.status === "rejected" && result.reason.code === "P2002",
+        ).length,
+        3,
+      );
+      assert.equal(await prisma.user.count({ where: { username: "parallel-user" } }), 1);
+      assert.equal(await prisma.auditEntry.count(), 2);
+    } finally {
+      await prisma.$disconnect();
+      await secondPrisma.$disconnect();
+    }
+  });
+
+  test("parallel bad logins cannot lose failed-attempt increments", async () => {
+    const databaseUrl = context.createDatabaseUrl();
+    const prisma = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
+    const secondPrisma = new PrismaClient({
+      datasources: { db: { url: databaseUrl } },
+    });
+    await prisma.$connect();
+    await secondPrisma.$connect();
+
+    try {
+      await ensureCreatorAccount(prisma, {
+        password: creatorPassword,
+        confirmPassword: creatorPassword,
+      });
+      const results = await Promise.allSettled(
+        Array.from({ length: 5 }, (_, index) =>
+          authenticate(
+            index % 2 === 0 ? prisma : secondPrisma,
+            "creator",
+            "WrongPassphrase#2026",
+          ),
+        ),
+      );
+      const account = await prisma.user.findUnique({
+        where: { username: "creator" },
+      });
+
+      assert.equal(results.filter(({ status }) => status === "fulfilled").length, 5);
+      assert.equal(results.filter(
+        ({ status, value }) => status === "fulfilled" && value === null,
+      ).length, 5);
+      assert.equal(account.failedLoginAttempts, 0);
+      assert.ok(account.lockedUntil instanceof Date);
+      assert.equal(await prisma.auditEntry.count({ where: { action: "LOGIN_LOCKOUT" } }), 1);
+    } finally {
+      await prisma.$disconnect();
+      await secondPrisma.$disconnect();
     }
   });
 });

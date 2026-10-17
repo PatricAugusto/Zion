@@ -115,6 +115,12 @@ backup, criptografia do disco, controles do sistema operacional ou alta
 disponibilidade. O banco não é compartilhado em rede e não transforma o Zion
 em um serviço multiusuário remoto.
 
+As gravações disparadas por várias conexões Prisma no mesmo processo são
+serializadas, e testes de integração cobrem bootstrap, criação de contas e
+falhas de login concorrentes em duas conexões. Isso não coordena processos
+independentes: execute uma única instância do Zion por arquivo SQLite; o arquivo
+não foi projetado para autenticação concorrente entre processos ou máquinas.
+
 O menu aceita somente as opções documentadas; escolhas inválidas, inclusive
 nomes de propriedades herdadas do JavaScript, não selecionam telas. Cores ANSI
 são desativadas fora de um terminal interativo. O `.gitignore` exclui o banco,
