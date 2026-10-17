@@ -158,8 +158,9 @@ terminais interativos e pode ser desativado definindo `NO_COLOR`.
 
 As opções `7` e `8` apresentam seis ciclos relativos e três séries didáticas:
 registros processados no cenário, eventos fictícios e preenchimento dos campos
-da amostra. Mínimo, média, máximo e variação entre o primeiro e o último ciclo
-são estatísticas descritivas; não há previsão, correlação ou inferência causal.
+da amostra. A opção `7` organiza os ciclos em linhas e as séries em colunas,
+seguida por uma tabela de mínimo, média, máximo e variação entre o primeiro e o
+último ciclo. São estatísticas descritivas; não há previsão, correlação ou inferência causal.
 Os ciclos não têm horário de calendário, e as séries não são telemetria nem
 métricas físicas.
 

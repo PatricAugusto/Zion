@@ -61,19 +61,23 @@ test("observability provides deterministic samples and descriptive statistics", 
   );
 });
 
-test("observability screen explains that series are synthetic and have distinct scales", () => {
+test("observability screen aligns cycle values and separates descriptive statistics", () => {
   const output = renderObservability();
 
   assert.match(output, /PAINEL DE OBSERVABILIDADE/);
   assert.match(output, /SÉRIE DIDÁTICA FIXA/);
-  assert.match(output, /registros\/ciclo/);
-  assert.match(output, /eventos\/ciclo/);
-  assert.match(output, /12\s+15\s+14\s+18\s+17\s+21/);
-  assert.match(output, /1\s+0\s+2\s+1\s+0\s+2/);
-  assert.match(output, /mín 12\s+·\s+média 16\.2\s+·\s+máx 21\s+·\s+Δ \+9/);
-  assert.match(output, /Barras relativas à própria série; compare valores, não comprimentos/);
+  assert.match(output, /VALORES POR CICLO/);
+  assert.match(output, /CICLO\s+REGISTROS\s+EVENTOS\s+PREENCHIMENTO/);
+  assert.match(output, /C-05\s+12\s+1\s+92/);
+  assert.match(output, /C-00\s+21\s+2\s+97/);
+  assert.match(output, /RESUMO ESTATÍSTICO/);
+  assert.match(output, /SÉRIE\s+UNIDADE\s+MÍN\s+MÉDIA\s+MÁX\s+Δ/);
+  assert.match(output, /REGISTROS\s+registros\/ciclo\s+12\s+16\.2\s+21\s+\+9/);
+  assert.match(output, /EVENTOS\s+eventos\/ciclo\s+0\s+1\s+2\s+\+1/);
+  assert.match(output, /PREENCHIMENTO\s+%\s+91\s+94\.2\s+97\s+\+5/);
+  assert.match(output, /Cada linha representa um ciclo; as colunas mantêm a mesma unidade/);
+  assert.match(output, /Δ compara o primeiro e o último ciclo da amostra/);
   assert.match(output, /Amostra fixa e didática; não é telemetria nem métrica física/);
-  assert.doesNotMatch(output, /SÉRIE\s+VALORES\s+MÍN/);
 });
 
 test("guided reading explains descriptive statistics without predictive claims", () => {

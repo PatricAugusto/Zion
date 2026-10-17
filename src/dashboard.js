@@ -103,21 +103,6 @@ function summarizeSeries(values) {
   };
 }
 
-function sparkline(values) {
-  const glyphs = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
-  const minimum = Math.min(...values);
-  const range = Math.max(...values) - minimum;
-
-  return values
-    .map((value) => {
-      const level = range === 0
-        ? 0
-        : Math.round(((value - minimum) / range) * (glyphs.length - 1));
-      return glyphs[level];
-    })
-    .join("");
-}
-
 function frame(lines, useColor = false, options = {}) {
   const width = Math.max(
     ...lines.map((line) => line.length),
@@ -251,37 +236,49 @@ export function analyzeObservability() {
 
 export function renderObservability(useColor = false) {
   const analysis = analyzeObservability();
-  const seriesNames = new Map([
-    ["records", "REGISTROS"],
-    ["events", "EVENTOS"],
-    ["completeness", "PREENCHIMENTO"],
+  const seriesNames = {
+    records: "REGISTROS",
+    events: "EVENTOS",
+    completeness: "PREENCHIMENTO",
+  };
+  const cycleRows = analysis.cycles.map((cycle, index) => [
+    cycle,
+    ...analysis.series.map(({ values }) => values[index]),
   ]);
+  const summaryRows = analysis.series.map((series) => [
+    seriesNames[series.key],
+    series.unit,
+    series.minimum,
+    Number.isInteger(series.mean) ? series.mean : series.mean.toFixed(1),
+    series.maximum,
+    series.change > 0 ? `+${series.change}` : String(series.change),
+  ]);
+  const cycleTable = renderTable(
+    ["CICLO", "REGISTROS", "EVENTOS", "PREENCHIMENTO"],
+    cycleRows,
+  );
+  const summaryTable = renderTable(
+    ["SÉRIE", "UNIDADE", "MÍN", "MÉDIA", "MÁX", "Δ"],
+    summaryRows,
+  );
   const lines = [
     "PAINEL DE OBSERVABILIDADE",
     `${analysis.source}  ·  ${analysis.cycleCount} CICLOS`,
     "",
-    `CICLOS  ${analysis.cycles.join("   ")}`,
+    "VALORES POR CICLO",
+    ...cycleTable,
     "",
-    ...analysis.series.flatMap((series, index) => {
-      const mean = Number.isInteger(series.mean)
-        ? String(series.mean)
-        : series.mean.toFixed(1);
-      const change = series.change > 0 ? `+${series.change}` : String(series.change);
-      return [
-        `${String(index + 1).padStart(2, "0")}  ${seriesNames.get(series.key)}  ·  ${series.unit}`,
-        `    ${sparkline(series.values)}`,
-        `    ${series.values.join("    ")}`,
-        `    mín ${series.minimum}   ·   média ${mean}   ·   máx ${series.maximum}   ·   Δ ${change}`,
-        "",
-      ];
-    }),
-    "Barras relativas à própria série; compare valores, não comprimentos.",
+    "RESUMO ESTATÍSTICO",
+    ...summaryTable,
+    "",
+    "Cada linha representa um ciclo; as colunas mantêm a mesma unidade.",
+    "Δ compara o primeiro e o último ciclo da amostra.",
     "Amostra fixa e didática; não é telemetria nem métrica física.",
   ];
 
   return frame(lines, useColor, {
     accentLines: [1],
-    headingLines: [3, 5, 10, 15],
+    headingLines: [3, cycleTable.length + 5],
     secondaryLines: [lines.length - 2, lines.length - 1],
   });
 }
