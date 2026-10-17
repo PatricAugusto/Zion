@@ -1,3 +1,5 @@
+import Table from "cli-table3";
+
 const snapshot = {
   sectors: [
     { id: "A1", name: "ÓRBITA BAIXA", status: "NOMINAL" },
@@ -53,6 +55,38 @@ const OBJECT_PROFILES = new Set([
   "SUPORTE",
 ]);
 const ALERT_LEVELS = new Set(["INFO", "AVISO"]);
+
+function renderTable(head, rows) {
+  const table = new Table({
+    head,
+    style: {
+      "padding-left": 1,
+      "padding-right": 1,
+      head: [],
+      border: [],
+      compact: true,
+    },
+    chars: {
+      top: "",
+      "top-mid": "",
+      "top-left": "",
+      "top-right": "",
+      bottom: "",
+      "bottom-mid": "",
+      "bottom-left": "",
+      "bottom-right": "",
+      left: " ",
+      "left-mid": "",
+      mid: "",
+      "mid-mid": "",
+      right: "",
+      "right-mid": "",
+      middle: "   ",
+    },
+  });
+  table.push(...rows);
+  return table.toString().split("\n");
+}
 
 function summarizeSeries(values) {
   const minimum = Math.min(...values);
@@ -281,24 +315,28 @@ export function renderSessionLog(
   useColor = false,
 ) {
   const visibleEntries = entries.slice(-12);
+  const rows = visibleEntries.map(
+    ({ sequence, timestamp, level, message }) => [
+      String(sequence).padStart(3, "0"),
+      timestamp,
+      level,
+      message,
+    ],
+  );
   const lines = [
     "REGISTRO DE SESSÃO LOCAL",
     "EVENTOS DO PROCESSO ATUAL  •  VOLÁTIL  •  NÃO É AUDITORIA PERSISTENTE",
     "",
-    "SEQ  HORÁRIO UTC              NÍVEL   EVENTO",
-    ...(visibleEntries.length === 0
+    ...(rows.length === 0
       ? ["Nenhum evento registrado nesta sessão."]
-      : visibleEntries.map(
-          ({ sequence, timestamp, level, message }) =>
-            `${String(sequence).padStart(3, "0")}  ${timestamp}  ${level.padEnd(5)}  ${message}`,
-        )),
+      : renderTable(["SEQ", "HORÁRIO UTC", "NÍVEL", "EVENTO"], rows)),
     "",
     `ENTRADAS RETIDAS: ${entries.length}/${capacity}  •  DESCARTADAS POR LIMITE: ${discardedCount}`,
     "Texto digitado não é armazenado; eventos usam rótulos predefinidos.",
   ];
 
   return frame(lines, useColor, {
-    centerLines: [0, 1, 10, 11],
+    centerLines: [0, 1, lines.length - 2, lines.length - 1],
     accentLines: [1],
   });
 }
@@ -306,21 +344,21 @@ export function renderSessionLog(
 export function renderAdminUsers(users, useColor = false) {
   const safeText = (value) =>
     String(value).replace(/[\u0000-\u001f\u007f-\u009f\u001b\u202a-\u202e\u2066-\u2069]/g, "?");
+  const rows = users.map(({ username, role, isActive, lockedUntil }) => {
+    const state = !isActive
+      ? "INATIVA"
+      : lockedUntil && lockedUntil > new Date()
+        ? "BLOQUEADA"
+        : "ATIVA";
+    return [safeText(username), safeText(role), state];
+  });
   const lines = [
     "CONTAS LOCAIS",
     "IDENTIDADE E ESTADO DE ACESSO",
     "",
-    "USUÁRIO                         PAPEL       ESTADO",
     ...(users.length === 0
       ? ["Nenhuma conta cadastrada."]
-      : users.map(({ username, role, isActive, lockedUntil }) => {
-          const state = !isActive
-            ? "INATIVA"
-            : lockedUntil && lockedUntil > new Date()
-              ? "BLOQUEADA"
-              : "ATIVA";
-          return `${safeText(username).padEnd(32)}${safeText(role).padEnd(12)}${state}`;
-        })),
+      : renderTable(["USUÁRIO", "PAPEL", "ESTADO"], rows)),
     "",
     "Senhas não são exibidas; bloqueios são temporários.",
   ];
@@ -337,11 +375,15 @@ export function renderAuditEntries(entries, useColor = false) {
     "AUDITORIA LOCAL",
     "EVENTOS RECENTES · SOMENTE LEITURA",
     "",
-    "DATA UTC                   USUÁRIO       EVENTO",
     ...(entries.length === 0
       ? ["Nenhum evento registrado."]
-      : entries.map(({ createdAt, actor, action }) =>
-          `${new Date(createdAt).toISOString()}  ${safeText(actor).padEnd(13)} ${safeText(action)}`,
+      : renderTable(
+          ["DATA UTC", "USUÁRIO", "EVENTO"],
+          entries.map(({ createdAt, actor, action }) => [
+            new Date(createdAt).toISOString(),
+            safeText(actor),
+            safeText(action),
+          ]),
         )),
     "",
     "Retenção local sem conteúdo de senha ou texto livre.",
@@ -353,23 +395,23 @@ export function renderAuditEntries(entries, useColor = false) {
 }
 
 export function renderSectorAnalysis(useColor = false) {
-  const lines = [
-    "ANÁLISE COMPARATIVA DE SETORES",
-    "CONTAGENS DO CENÁRIO FICTÍCIO — NÃO SÃO MÉTRICAS ORBITAIS",
-    "",
-    "SETOR                STATUS       OBJETOS  ALERTAS",
-    ...snapshot.sectors.map((sector) => {
+  const sectorTable = renderTable(
+    ["SETOR", "STATUS", "OBJETOS", "ALERTAS"],
+    snapshot.sectors.map((sector) => {
       const objectCount = snapshot.objects.filter(
         (object) => object.sectorId === sector.id,
       ).length;
       const alertCount = snapshot.alerts.filter(
         (alert) => alert.sectorId === sector.id,
       ).length;
-      const name = `${sector.id} ${sector.name}`.padEnd(21);
-      const status = sector.status.padEnd(12);
-      const objects = String(objectCount).padStart(7);
-      return `${name}${status}${objects}${String(alertCount).padStart(9)}`;
+      return [`${sector.id} ${sector.name}`, sector.status, objectCount, alertCount];
     }),
+  );
+  const lines = [
+    "ANÁLISE COMPARATIVA DE SETORES",
+    "CONTAGENS DO CENÁRIO FICTÍCIO — NÃO SÃO MÉTRICAS ORBITAIS",
+    "",
+    ...sectorTable,
     "",
     "BARRA = quantidade de objetos cadastrados no cenário:",
     ...snapshot.sectors.map((sector) => {
@@ -383,7 +425,7 @@ export function renderSectorAnalysis(useColor = false) {
   ];
 
   return frame(lines, useColor, {
-    centerLines: [0, 1, 3, 8, 14],
+    centerLines: [0, 1, sectorTable.length + 4, lines.length - 1],
     accentLines: [1],
   });
 }
@@ -396,8 +438,12 @@ export function renderAnalysis(useColor = false) {
     "",
     `VERIFICAÇÕES APROVADAS: ${analysis.passed}/${analysis.total}`,
     "",
-    ...analysis.checks.map(
-      ({ name, passed }) => `[${passed ? "OK" : "FALHA"}] ${name}`,
+    ...renderTable(
+      ["VERIFICAÇÃO", "RESULTADO"],
+      analysis.checks.map(({ name, passed }) => [
+        name,
+        passed ? "OK" : "FALHA",
+      ]),
     ),
     "",
     "Resultado avalia apenas consistência dos dados de demonstração.",
@@ -405,9 +451,10 @@ export function renderAnalysis(useColor = false) {
   ];
 
   return frame(lines, useColor, {
-    centerLines: [0, 1, 3, 14, 15],
+    centerLines: [0, 1, 3, 17, 18],
     accentLines: [1],
-    statusLines: analysis.checks.map((check, index) => index + 5),
+    headingLines: [5],
+    statusLines: analysis.checks.map((check, index) => index + 6),
   });
 }
 

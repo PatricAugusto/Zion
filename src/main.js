@@ -1,3 +1,6 @@
+import { isCancel, intro, outro, select } from "@clack/prompts";
+import chalk from "chalk";
+import ora from "ora";
 import {
   renderAlertAnalysis,
   renderAlerts,
@@ -24,14 +27,23 @@ import { prisma } from "./db.js";
 import { createMenuAttemptGuard, MAX_CONSECUTIVE_INVALID_ATTEMPTS } from "./menu-guard.js";
 import { createSessionLog } from "./session-log.js";
 import { createTerminalInput } from "./terminal-input.js";
+import { createPromptInput } from "./prompt-input.js";
 
-const terminalInput = createTerminalInput();
+const isInteractive = Boolean(
+  process.stdin.isTTY &&
+  process.stdout.isTTY &&
+  process.stdin.setRawMode,
+);
+chalk.level = process.stdout.isTTY &&
+  process.env.NO_COLOR === undefined &&
+  process.env.TERM !== "dumb"
+  ? 1
+  : 0;
+const terminalInput = isInteractive ? null : createTerminalInput();
+const promptInput = isInteractive ? createPromptInput() : null;
 const sessionLog = createSessionLog();
 const menuAttemptGuard = createMenuAttemptGuard();
-const useColor =
-  Boolean(process.stdout.isTTY) &&
-  process.env.NO_COLOR === undefined &&
-  process.env.TERM !== "dumb";
+const useColor = chalk.level > 0;
 
 const views = new Map([
   ["1", { key: "OBJECTS", render: renderObjects }],
@@ -58,7 +70,45 @@ function menuFor(user) {
   return lines.join("\n");
 }
 
+function mainMenuOptions(user) {
+  const options = [
+    { value: "1", label: "Objetos", hint: "Explorar os registros fictícios" },
+    { value: "2", label: "Alertas", hint: "Consultar os avisos simulados" },
+    { value: "3", label: "Integridade", hint: "Verificações estruturais locais" },
+    { value: "4", label: "Setores", hint: "Comparar contagens do cenário" },
+    { value: "5", label: "Resumo de alertas", hint: "Distribuição dos rótulos didáticos" },
+    { value: "6", label: "Segurança", hint: "Princípios e limites do Zion" },
+    { value: "7", label: "Observabilidade", hint: "Séries e ciclos demonstrativos" },
+    { value: "8", label: "Leitura guiada", hint: "Como interpretar as séries" },
+    { value: "9", label: "Registro da sessão", hint: "Eventos locais desta execução" },
+  ];
+  if (user.role === "MASTER") {
+    options.push({ value: "a", label: "Administração", hint: "Contas e auditoria do Creator" });
+  }
+  options.push({ value: "q", label: "Sair" });
+  return options;
+}
+
+async function selectMenuChoice(message, options, initialValue) {
+  const choice = await select({ message, options, initialValue });
+  return isCancel(choice) ? null : choice;
+}
+
+async function runTask(label, operation) {
+  if (!isInteractive) return operation();
+  const spinner = ora({ text: label, color: useColor ? "cyan" : "white" }).start();
+  try {
+    const result = await operation();
+    spinner.succeed(chalk.green(label));
+    return result;
+  } catch (error) {
+    spinner.fail(chalk.red(`${label} — falhou`));
+    throw error;
+  }
+}
+
 async function readAnswer(prompt, options = {}) {
+  if (isInteractive) return promptInput.read(prompt, options);
   const answer = await terminalInput.read(prompt, options);
   return options.secret ? answer : answer?.trim() ?? null;
 }
@@ -121,9 +171,19 @@ async function logInvalidInput(user) {
 
 async function runAdminMenu(user) {
   while (true) {
-    console.log("\nADMIN MASTER");
-    console.log("[1] Criar conta  [2] Listar contas  [3] Auditoria  [q] Voltar");
-    const choice = (await readAnswer("admin> "))?.toLowerCase();
+    let choice;
+    if (isInteractive) {
+      choice = await selectMenuChoice("Admin Master", [
+        { value: "1", label: "Criar conta", hint: "Cadastrar usuário comum" },
+        { value: "2", label: "Listar contas" },
+        { value: "3", label: "Consultar auditoria" },
+        { value: "q", label: "Voltar" },
+      ], "q");
+    } else {
+      console.log("\nADMIN MASTER");
+      console.log("[1] Criar conta  [2] Listar contas  [3] Auditoria  [q] Voltar");
+      choice = (await readAnswer("admin> "))?.toLowerCase();
+    }
     if (choice === null || choice === "q") return true;
 
     if (!["1", "2", "3"].includes(choice)) {
@@ -145,14 +205,14 @@ async function runAdminMenu(user) {
           credentials.password,
           credentials.confirmPassword,
         );
-        console.log(`Conta "${created.username}" criada como usuário comum.`);
+        console.log(chalk.green(`Conta "${created.username}" criada como usuário comum.`));
       } catch (error) {
         if (error?.code === "P2002") {
-          console.log("Esse nome de usuário já está em uso.");
+          console.log(chalk.yellow("Esse nome de usuário já está em uso."));
           continue;
         }
         if (error instanceof TypeError) {
-          console.log(error.message);
+          console.log(chalk.yellow(error.message));
           continue;
         }
         throw error;
@@ -171,8 +231,13 @@ async function runApplication(user) {
 
   while (running) {
     console.log(renderDashboard(useColor, process.stdout.columns ?? 80));
-    console.log(menuFor(user));
-    const answer = await readAnswer("zion> ");
+    let answer;
+    if (isInteractive) {
+      answer = await selectMenuChoice("Escolha uma tela", mainMenuOptions(user), "1");
+    } else {
+      console.log(menuFor(user));
+      answer = await readAnswer("zion> ");
+    }
     if (answer === null) {
       sessionLog.record("INPUT_ENDED");
       running = false;
@@ -217,7 +282,8 @@ async function runApplication(user) {
 async function main() {
   let user = null;
   try {
-    await prisma.$connect();
+    if (isInteractive) intro(`${chalk.bold.cyan("ZION")} ${chalk.dim("· console local demonstrativo")}`);
+    await runTask("Conectando ao banco local", () => prisma.$connect());
     user = await authenticateAtStartup();
     if (!user) {
       console.error("Autenticação não concluída. Acesso ao Zion encerrado.");
@@ -238,9 +304,10 @@ async function main() {
         process.exitCode = 1;
       }
     }
-    terminalInput.close();
+    if (terminalInput) terminalInput.close();
     await prisma.$disconnect();
   }
+  if (isInteractive) outro("Sessão encerrada com segurança.");
 }
 
 await main();

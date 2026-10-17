@@ -157,6 +157,8 @@ test("integrity analysis validates local data structure, not space conditions", 
   assert.equal(analysis.passed, 10);
   assert.match(output, /INTEGRIDADE DOS DADOS DO CENÁRIO/);
   assert.match(output, /VERIFICAÇÕES APROVADAS: 10\/10/);
+  assert.match(output, /VERIFICAÇÃO\s+RESULTADO/);
+  assert.match(output, /Objetos vinculados a setores existentes\s+OK/);
   assert.match(output, /Objetos vinculados a setores existentes/);
   assert.match(output, /Não é uma avaliação de risco ou condição espacial real/);
 });
@@ -168,6 +170,7 @@ test("sector comparison derives object and alert counts by sector", () => {
   assert.match(output, /A1 ÓRBITA BAIXA/);
   assert.match(output, /B2 ÓRBITA MÉDIA/);
   assert.match(output, /C3 REGIÃO LUNAR/);
+  assert.match(output, /SETOR\s+STATUS\s+OBJETOS\s+ALERTAS/);
   assert.match(output, /CONTAGENS DO CENÁRIO FICTÍCIO/);
   assert.match(output, /não indicam risco, distância, trajetória ou segurança real/);
 });

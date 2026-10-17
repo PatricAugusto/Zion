@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node scripts/prisma-command.js migrate deploy && node src/main.js",
     "test": "node scripts/run-tests.js",
-    "test:unit": "node --test --test-reporter=spec test/unit/dashboard.test.js test/unit/menu-guard.test.js test/unit/session-log.test.js test/unit/auth.test.js",
+    "test:unit": "node --test --test-reporter=spec test/unit/dashboard.test.js test/unit/menu-guard.test.js test/unit/session-log.test.js test/unit/auth.test.js test/unit/prompt-input.test.js",
     "test:integration": "node --test --test-reporter=spec test/integration/cli.test.js test/integration/database.test.js",
     "test:security": "node --test --test-reporter=spec test/security/security.test.js",
     "security:audit": "npm audit --audit-level=high",
@@ -17,7 +17,11 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.0"
+    "@clack/prompts": "^1.8.1",
+    "@prisma/client": "^6.19.0",
+    "chalk": "^6.0.1",
+    "cli-table3": "^0.6.5",
+    "ora": "^9.4.1"
   },
   "devDependencies": {
     "prisma": "^6.19.0"

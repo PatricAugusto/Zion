@@ -70,6 +70,14 @@ O layout se adapta à largura do terminal, e os rótulos continuam claros sem co
 A moldura é apenas visual: a execução continua local e não realiza operações
 de rede ou ações externas.
 
+Em terminais interativos, a navegação usa seletores de teclado e campos
+mascarados; as telas de integridade, setores, contas e registros usam tabelas
+compactas. A conexão ao banco mostra um indicador de tarefa. Essas melhorias
+usam Chalk, `@clack/prompts`, `cli-table3` e Ora. Em entrada redirecionada, a
+CLI mantém o modo texto simples para continuar compatível com scripts e testes.
+Pressionar Enter sem texto na confirmação de uma tela retorna ao painel; o
+cancelamento do prompt continua sendo tratado separadamente.
+
 A suíte de segurança verifica entradas hostis e extensas no menu, floods de
 entradas, tentativas de injeção ANSI/OSC, caracteres de controle nas telas e
 limites de dimensões do terminal. Ela é descoberta por `npm test` e executada

@@ -36,6 +36,18 @@ describe("Zion CLI integration tests", () => {
     assert.doesNotMatch(result.stdout, /\u001b/);
   });
 
+  test("returns to the main menu after confirming a screen with Enter", () => {
+    const result = cli.run(
+      `${creatorPassword}\n${creatorPassword}\n1\n\nq\n`,
+    ).result;
+
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
+    assert.match(result.stdout, /OBJETOS SIMULADOS\s+·\s+09 REGISTROS/);
+    assert.equal((result.stdout.match(/Z I O N\s+\/\s+CENTRO DE CENÁRIO/g) ?? []).length, 2);
+    assert.match(result.stdout, /Zion encerrado\. Nenhuma ação externa foi executada\./);
+  });
+
   test("session log records rejected menu events without echoing user input", () => {
     const secret = "PRIVATE_INPUT_SHOULD_NOT_BE_LOGGED";
     const result = cli.run(
