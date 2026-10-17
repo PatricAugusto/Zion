@@ -3,6 +3,10 @@ const MAX_ENTRIES = 50;
 const events = new Map([
   ["APP_STARTED", { level: "INFO", message: "Sessão Zion iniciada." }],
   ["INVALID_INPUT", { level: "AVISO", message: "Entrada de menu rejeitada." }],
+  ["INPUT_LIMIT_REACHED", {
+    level: "AVISO",
+    message: "Sessão encerrada após entradas inválidas consecutivas.",
+  }],
   ["INPUT_ENDED", { level: "INFO", message: "Entrada do terminal encerrada." }],
   ["APP_STOPPED", { level: "INFO", message: "Sessão Zion encerrada." }],
 ]);

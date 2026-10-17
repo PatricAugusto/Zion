@@ -55,6 +55,26 @@ test("unknown and inherited object-property choices are rejected", () => {
   assert.doesNotMatch(result.stdout, /function Object|PRINCÍPIOS DE SEGURANÇA DO ZION/);
 });
 
+test("ten consecutive invalid choices end the session with a visible lockout", () => {
+  const result = runCli(`${"invalid\n".repeat(10)}q\n`);
+
+  assert.equal(result.error, undefined);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal((result.stdout.match(/Opção inválida/g) ?? []).length, 9);
+  assert.match(result.stdout, /Limite de 10 entradas inválidas consecutivas atingido/);
+  assert.match(result.stdout, /Zion encerrado\. Nenhuma ação externa foi executada\./);
+});
+
+test("a valid screen choice resets the consecutive invalid-choice limit", () => {
+  const result = runCli(`${"invalid\n".repeat(9)}1\n\n${"invalid\n".repeat(9)}q\n`);
+
+  assert.equal(result.error, undefined);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /OBJETOS DO CENÁRIO SIMULADO/);
+  assert.equal((result.stdout.match(/Opção inválida/g) ?? []).length, 18);
+  assert.doesNotMatch(result.stdout, /Limite de 10 entradas inválidas consecutivas atingido/);
+});
+
 test("end of input exits without hanging or executing an action", () => {
   const result = runCli("");
 

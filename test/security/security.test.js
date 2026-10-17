@@ -63,6 +63,18 @@ test("hostile menu input is rejected without being echoed or interpreted", () =>
   assert.match(result.stdout, /Zion encerrado\. Nenhuma ação externa foi executada\./);
 });
 
+test("a menu-input burst is bounded and does not echo its payload", () => {
+  const marker = "FLOOD_PAYLOAD_MUST_NOT_BE_ECHOED";
+  const result = runCli(`${`${marker}\n`.repeat(1000)}q\n`);
+
+  assert.equal(result.error, undefined);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Limite de 10 entradas inválidas consecutivas atingido/);
+  assert.equal((result.stdout.match(/Opção inválida/g) ?? []).length, 9);
+  assert.doesNotMatch(result.stdout, new RegExp(marker));
+  assert.ok(result.stdout.length < 20_000);
+});
+
 test("all screens emit no terminal control characters when colors are disabled", () => {
   for (const render of renderers) {
     const output = render(false);

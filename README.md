@@ -50,16 +50,23 @@ npm run test:integration
 npm run test:security
 ```
 
+O `npm test` preserva o relatório detalhado do Node.js e acrescenta um painel
+com totais, taxa de aprovação, duração e resultados por grupo. A suíte também
+limita a sessão local após 10 entradas inválidas consecutivas; uma opção de
+tela válida reinicia a contagem. O limite reduz floods acidentais ou locais no
+menu, mas não é autenticação nem proteção contra DDoS de rede.
+
 O painel resume os indicadores e compara os setores em uma tabela; o menu
 agrupa as telas por assunto. O console usa cor apenas em terminais interativos;
 defina `NO_COLOR` para desativá-la. A moldura é apenas visual: a execução
 continua local e não realiza operações de rede ou ações externas.
 
-A suíte de segurança verifica entradas hostis e extensas no menu, tentativas de
-injeção ANSI/OSC, caracteres de controle nas telas e limites de dimensões do
-terminal. Ela é descoberta por `npm test` e executada no CI para cada versão
-suportada do Node.js. Esses testes são verificações automatizadas de regressão,
-não uma certificação ou auditoria de segurança independente.
+A suíte de segurança verifica entradas hostis e extensas no menu, floods de
+entradas, tentativas de injeção ANSI/OSC, caracteres de controle nas telas e
+limites de dimensões do terminal. Ela é descoberta por `npm test` e executada
+no CI para cada versão suportada do Node.js. Esses testes são verificações
+automatizadas de regressão, não uma certificação ou auditoria de segurança
+independente.
 
 ## Segurança
 
@@ -76,6 +83,11 @@ nomes de propriedades herdadas do JavaScript, não selecionam telas. Cores ANSI
 são desativadas fora de um terminal interativo. O `.gitignore` exclui arquivos
 de ambiente e artefatos locais comuns.
 
+Dez escolhas inválidas consecutivas encerram o processo com aviso explícito;
+abrir uma tela válida zera o contador. Como o Zion não oferece autenticação nem
+serviço de rede, esse controle protege o loop do terminal contra repetição
+excessiva, mas não é um mecanismo anti-DDoS distribuído.
+
 O registro da opção `9` mantém até 50 eventos em memória durante a sessão atual.
 Ele usa rótulos fixos para início, telas abertas, opções inválidas e encerramento;
 o texto digitado pelo usuário não é armazenado. Os eventos são descartados ao
@@ -85,9 +97,8 @@ As análises verificam a integridade estrutural e exibem contagens do conjunto
 fictício local. Não estimam órbitas, colisões, trajetórias, riscos ou estados
 reais, e não constituem recomendações operacionais. A cor é apenas decoração;
 as etiquetas de texto permanecem presentes sem ANSI. A interface usa um painel
-espacial em terminal com mapa conceitual e indicadores locais; o modo colorido
-é ativado apenas em terminais interativos e pode ser desativado definindo
-`NO_COLOR`.
+de terminal com indicadores locais; o modo colorido é ativado apenas em
+terminais interativos e pode ser desativado definindo `NO_COLOR`.
 
 ## Observabilidade para aprendizado
 

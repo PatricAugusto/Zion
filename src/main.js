@@ -12,6 +12,10 @@ import {
   renderSectorAnalysis,
 } from "./dashboard.js";
 import { createSessionLog } from "./session-log.js";
+import {
+  createMenuAttemptGuard,
+  MAX_CONSECUTIVE_INVALID_ATTEMPTS,
+} from "./menu-guard.js";
 
 const terminal = createInterface({
   input: process.stdin,
@@ -19,6 +23,7 @@ const terminal = createInterface({
 });
 const answers = terminal[Symbol.asyncIterator]();
 const sessionLog = createSessionLog();
+const menuAttemptGuard = createMenuAttemptGuard();
 const useColor =
   Boolean(process.stdout.isTTY) &&
   process.env.NO_COLOR === undefined &&
@@ -73,10 +78,19 @@ try {
     const view = views.get(choice);
     if (!view) {
       sessionLog.record("INVALID_INPUT");
+      if (menuAttemptGuard.recordInvalidAttempt()) {
+        sessionLog.record("INPUT_LIMIT_REACHED");
+        console.log(
+          `\nLimite de ${MAX_CONSECUTIVE_INVALID_ATTEMPTS} entradas inválidas consecutivas atingido. Sessão encerrada.\n`,
+        );
+        running = false;
+        continue;
+      }
       console.log("\nOpção inválida. Escolha 1–9 ou q.\n");
       continue;
     }
 
+    menuAttemptGuard.recordValidChoice();
     sessionLog.record("SCREEN_OPENED", view.key);
     const output = view.key === "SESSION_LOG"
       ? view.render()

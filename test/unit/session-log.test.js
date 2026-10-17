@@ -48,6 +48,25 @@ describe("Zion session log unit tests", () => {
     assert.equal(sessionLog.read().entries.length, 0);
   });
 
+  test("records menu lockout with a fixed message and never stores attempted input", () => {
+    const sessionLog = createSessionLog();
+
+    sessionLog.record("INVALID_INPUT");
+    sessionLog.record("INPUT_LIMIT_REACHED");
+
+    assert.equal(
+      sessionLog.read().entries.at(-1).message,
+      "Sessão encerrada após entradas inválidas consecutivas.",
+    );
+  });
+
+  test("rejects an invalid clock without adding an entry", () => {
+    const sessionLog = createSessionLog(() => new Date(Number.NaN));
+
+    assert.throws(() => sessionLog.record("APP_STARTED"), TypeError);
+    assert.equal(sessionLog.read().entries.length, 0);
+  });
+
   test("retains at most 50 entries and counts discarded entries", () => {
     let tick = 0;
     const sessionLog = createSessionLog(
