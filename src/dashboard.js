@@ -5,9 +5,15 @@ const snapshot = {
     { id: "C3", name: "REGIÃO LUNAR", status: "NOMINAL" },
   ],
   objects: [
-    { id: "SIM-01", name: "PLATAFORMA A", sectorId: "A1", status: "ESTÁVEL" },
-    { id: "SIM-02", name: "PLATAFORMA B", sectorId: "B2", status: "OBSERVAÇÃO" },
-    { id: "SIM-03", name: "SONDA C", sectorId: "C3", status: "ESTÁVEL" },
+    { id: "SIM-01", name: "PLATAFORMA A", sectorId: "A1", profile: "PLATAFORMA", status: "ESTÁVEL", completeness: 98, cycles: 12 },
+    { id: "SIM-02", name: "PLATAFORMA B", sectorId: "B2", profile: "PLATAFORMA", status: "OBSERVAÇÃO", completeness: 91, cycles: 8 },
+    { id: "SIM-03", name: "SONDA C", sectorId: "C3", profile: "SONDA", status: "ESTÁVEL", completeness: 95, cycles: 15 },
+    { id: "SIM-04", name: "RELÉ D", sectorId: "A1", profile: "COMUNICAÇÃO", status: "ESTÁVEL", completeness: 89, cycles: 10 },
+    { id: "SIM-05", name: "SENSOR E", sectorId: "B2", profile: "SENSOR", status: "OBSERVAÇÃO", completeness: 84, cycles: 6 },
+    { id: "SIM-06", name: "MÓDULO F", sectorId: "C3", profile: "SUPORTE", status: "ESTÁVEL", completeness: 97, cycles: 14 },
+    { id: "SIM-07", name: "SONDA G", sectorId: "A1", profile: "SONDA", status: "ESTÁVEL", completeness: 93, cycles: 11 },
+    { id: "SIM-08", name: "RELÉ H", sectorId: "B2", profile: "COMUNICAÇÃO", status: "ESTÁVEL", completeness: 88, cycles: 9 },
+    { id: "SIM-09", name: "SENSOR I", sectorId: "B2", profile: "SENSOR", status: "ESTÁVEL", completeness: 96, cycles: 13 },
   ],
   alerts: [
     {
@@ -39,6 +45,13 @@ const observability = {
 
 const STATUS_LABELS = new Set(["NOMINAL", "OBSERVAÇÃO"]);
 const OBJECT_STATUSES = new Set(["ESTÁVEL", "OBSERVAÇÃO"]);
+const OBJECT_PROFILES = new Set([
+  "PLATAFORMA",
+  "SONDA",
+  "COMUNICAÇÃO",
+  "SENSOR",
+  "SUPORTE",
+]);
 const ALERT_LEVELS = new Set(["INFO", "AVISO"]);
 
 function summarizeSeries(values) {
@@ -130,6 +143,21 @@ export function analyzeScenario() {
     {
       name: "Estados de objeto reconhecidos",
       passed: snapshot.objects.every(({ status }) => OBJECT_STATUSES.has(status)),
+    },
+    {
+      name: "Perfis de objeto reconhecidos",
+      passed: snapshot.objects.every(({ profile }) => OBJECT_PROFILES.has(profile)),
+    },
+    {
+      name: "Métricas demonstrativas dentro dos limites",
+      passed: snapshot.objects.every(
+        ({ completeness, cycles }) =>
+          Number.isInteger(completeness) &&
+          completeness >= 0 &&
+          completeness <= 100 &&
+          Number.isInteger(cycles) &&
+          cycles >= 0,
+      ),
     },
     {
       name: "Identificadores de alertas únicos",
@@ -398,7 +426,13 @@ export function renderDashboard(useColor = false, terminalColumns = 80) {
     ).length;
     const name = `${String(index + 1).padStart(2, "0")}. ${sector.id} ${sector.name}`;
     const status = sector.status === "OBSERVAÇÃO" ? "● ATENÇÃO" : "● NOMINAL";
-    const objectBar = "▰".repeat(objectCount) + "▱".repeat(3 - objectCount);
+    const maximumObjectCount = Math.max(
+      ...snapshot.sectors.map(
+        ({ id }) => snapshot.objects.filter((object) => object.sectorId === id).length,
+      ),
+    );
+    const objectBar = "▰".repeat(objectCount) +
+      "▱".repeat(maximumObjectCount - objectCount);
     return `${name.padEnd(26)}${status.padEnd(13)} ${objectBar}  ${String(alertCount).padStart(2, "0")} ev.`;
   });
   const observedSector = snapshot.sectors.find(({ status }) => status === "OBSERVAÇÃO");
@@ -450,20 +484,36 @@ export function renderDashboard(useColor = false, terminalColumns = 80) {
 
 export function renderObjects(useColor = false) {
   const sectors = new Map(snapshot.sectors.map((sector) => [sector.id, sector]));
+  const stableCount = snapshot.objects.filter(({ status }) => status === "ESTÁVEL").length;
+  const observedCount = snapshot.objects.length - stableCount;
+  const averageCompleteness = (
+    snapshot.objects.reduce((total, { completeness }) => total + completeness, 0) /
+    snapshot.objects.length
+  ).toFixed(1);
   const lines = [
-    "OBJETOS DO CENÁRIO SIMULADO",
+    `OBJETOS SIMULADOS  ·  ${String(snapshot.objects.length).padStart(2, "0")} REGISTROS`,
+    `${stableCount} estáveis  ·  ${observedCount} em observação  ·  preenchimento médio ${averageCompleteness}%`,
     "",
-    "ID       OBJETO             SETOR              ESTADO",
-    ...snapshot.objects.map((object) => {
+    "CONJUNTO DEMONSTRATIVO",
+    ...snapshot.objects.flatMap((object) => {
       const sector = sectors.get(object.sectorId);
-      return `${object.id.padEnd(9)}${object.name.padEnd(19)}${sector.name.padEnd(19)}${object.status}`;
+      return [
+        `${object.id}  ${object.name}`,
+        `  ${sector.id} · ${sector.name}  |  perfil ${object.profile}`,
+        `  estado ${object.status}  |  preenchimento ${String(object.completeness).padStart(2, "0")}%  |  ${String(object.cycles).padStart(2, "0")} ciclos`,
+        "",
+      ];
     }),
-    "",
-    "Identificadores e estados acima são demonstrativos.",
+    "Perfis, preenchimento e ciclos são valores fictícios para comparação.",
+    "Não representam telemetria, medições físicas ou atividade orbital real.",
   ];
 
   return frame(lines, useColor, {
-    centerLines: [0, 7],
+    accentLines: [1],
+    headingLines: [3],
+    statusLines: snapshot.objects.flatMap((object, index) =>
+      object.status === "OBSERVAÇÃO" ? [6 + index * 4] : [],
+    ),
   });
 }
 

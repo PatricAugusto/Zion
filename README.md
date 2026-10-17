@@ -29,6 +29,10 @@ princípios de segurança:
 | `a` | Administração do Creator (contas e auditoria) |
 | `q` | Sair |
 
+A tela de objetos reúne nove registros fictícios com perfil, estado,
+preenchimento e ciclos demonstrativos. Esses valores permitem praticar
+comparações entre itens e setores; não são telemetria nem medições físicas.
+
 Para executar os testes:
 
 ```powershell

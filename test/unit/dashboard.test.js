@@ -31,8 +31,8 @@ test("dashboard shows all sectors and derives counts from scenario data", () => 
   assert.match(output, /ÓRBITA BAIXA/);
   assert.match(output, /ÓRBITA MÉDIA/);
   assert.match(output, /REGIÃO LUNAR/);
-  assert.match(output, /03\s+objetos\s+02\s+alertas\s+03\s+setores/);
-  assert.match(output, /INTEGRIDADE\s+▰+▱*\s+8\/8\s+SÉRIES\s+06 ciclos/);
+  assert.match(output, /09\s+objetos\s+02\s+alertas\s+03\s+setores/);
+  assert.match(output, /INTEGRIDADE\s+▰+▱*\s+10\/10\s+SÉRIES\s+06 ciclos/);
   assert.match(output, /B2\s+\/\s+ÓRBITA MÉDIA\s+·\s+1 alerta simulado para revisão/);
   assert.match(output, /SETOR\s+ESTADO\s+OBJ\s+EVT/);
   assert.match(output, /01\. A1 ÓRBITA BAIXA/);
@@ -113,14 +113,22 @@ test("session log view shows recent events and retention without raw input", () 
   assert.match(output, /Texto digitado não é armazenado/);
 });
 
-test("object view shows only the fixed simulated object set", () => {
+test("object view presents expanded fictional records and comparative attributes", () => {
   const output = renderObjects();
 
-  assert.match(output, /OBJETOS DO CENÁRIO SIMULADO/);
-  assert.match(output, /SIM-01\s+PLATAFORMA A\s+ÓRBITA BAIXA/);
-  assert.match(output, /SIM-02\s+PLATAFORMA B\s+ÓRBITA MÉDIA/);
-  assert.match(output, /SIM-03\s+SONDA C\s+REGIÃO LUNAR/);
-  assert.match(output, /são demonstrativos/);
+  assert.match(output, /OBJETOS SIMULADOS\s+·\s+09 REGISTROS/);
+  assert.match(output, /7 estáveis\s+·\s+2 em observação\s+·\s+preenchimento médio 92\.3%/);
+  for (const id of [
+    "SIM-01", "SIM-02", "SIM-03", "SIM-04", "SIM-05",
+    "SIM-06", "SIM-07", "SIM-08", "SIM-09",
+  ]) {
+    assert.match(output, new RegExp(id));
+  }
+  assert.match(output, /SIM-01\s+PLATAFORMA A/);
+  assert.match(output, /A1\s+·\s+ÓRBITA BAIXA\s+\|\s+perfil PLATAFORMA/);
+  assert.match(output, /estado ESTÁVEL\s+\|\s+preenchimento 98%\s+\|\s+12 ciclos/);
+  assert.match(output, /Perfis, preenchimento e ciclos são valores fictícios/);
+  assert.match(output, /Não representam telemetria, medições físicas ou atividade orbital real/);
 });
 
 test("alert view labels alerts as simulated", () => {
@@ -146,9 +154,9 @@ test("integrity analysis validates local data structure, not space conditions", 
   const output = renderAnalysis();
 
   assert.equal(analysis.passed, analysis.total);
-  assert.equal(analysis.passed, 8);
+  assert.equal(analysis.passed, 10);
   assert.match(output, /INTEGRIDADE DOS DADOS DO CENÁRIO/);
-  assert.match(output, /VERIFICAÇÕES APROVADAS: 8\/8/);
+  assert.match(output, /VERIFICAÇÕES APROVADAS: 10\/10/);
   assert.match(output, /Objetos vinculados a setores existentes/);
   assert.match(output, /Não é uma avaliação de risco ou condição espacial real/);
 });

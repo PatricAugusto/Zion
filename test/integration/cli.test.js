@@ -22,7 +22,7 @@ describe("Zion CLI integration tests", () => {
     assert.equal(result.error, undefined);
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /Conta Creator provisionada com segurança/);
-    assert.match(result.stdout, /OBJETOS DO CENÁRIO SIMULADO/);
+    assert.match(result.stdout, /OBJETOS SIMULADOS\s+·\s+09 REGISTROS/);
     assert.match(result.stdout, /ALERTAS DO CENÁRIO SIMULADO/);
     assert.match(result.stdout, /INTEGRIDADE DOS DADOS DO CENÁRIO/);
     assert.match(result.stdout, /ANÁLISE COMPARATIVA DE SETORES/);
