@@ -50,9 +50,10 @@ npm run test:integration
 npm run test:security
 ```
 
-O console visual usa cor apenas em terminais interativos; defina `NO_COLOR`
-para desativá-la. A moldura é apenas visual: a execução continua local e não
-realiza operações de rede ou ações externas.
+O painel resume os indicadores e compara os setores em uma tabela; o menu
+agrupa as telas por assunto. O console usa cor apenas em terminais interativos;
+defina `NO_COLOR` para desativá-la. A moldura é apenas visual: a execução
+continua local e não realiza operações de rede ou ações externas.
 
 A suíte de segurança verifica entradas hostis e extensas no menu, tentativas de
 injeção ANSI/OSC, caracteres de controle nas telas e limites de dimensões do
@@ -103,5 +104,7 @@ Todos os setores, objetos e alertas são fictícios. O Zion não recebe telemetr
 não consulta dados orbitais e não envia comandos a sistemas externos. O mapa é
 esquemático e não está em escala.
 
-O painel centraliza títulos, indicadores e avisos para facilitar a leitura;
-linhas tabulares permanecem alinhadas para preservar a comparação de dados.
+O painel prioriza os indicadores e as contagens por setor. Os gráficos
+decorativos foram removidos para reduzir ruído visual e deixar os dados
+comparáveis; títulos, dados fictícios e limites de segurança continuam
+identificados.

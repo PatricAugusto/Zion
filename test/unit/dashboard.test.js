@@ -20,13 +20,9 @@ describe("Zion unit tests", () => {
 test("dashboard identifies the environment as isolated and simulated", () => {
   const output = renderDashboard();
 
-  assert.match(output, /SISTEMA ISOLADO/);
-  assert.match(output, /SEM TELEMETRIA/);
-  assert.match(output, /DADOS FICTÍCIOS/);
-  assert.match(
-    output,
-    /SEM AÇÕES EXTERNAS/,
-  );
+  assert.match(output, /local · apenas leitura/);
+  assert.match(output, /Cenário fictício/);
+  assert.match(output, /Sem telemetria ou ações externas/);
 });
 
 test("dashboard shows all sectors and derives counts from scenario data", () => {
@@ -35,10 +31,10 @@ test("dashboard shows all sectors and derives counts from scenario data", () => 
   assert.match(output, /ÓRBITA BAIXA/);
   assert.match(output, /ÓRBITA MÉDIA/);
   assert.match(output, /REGIÃO LUNAR/);
-  assert.match(output, /OBJETOS 03/);
-  assert.match(output, /ALERTAS 02/);
-  assert.match(output, /INTEGRIDADE LOCAL.*8\/8/);
-  assert.match(output, /OBSERVABILIDADE\s+06 CICLOS/);
+  assert.match(output, /OBJETOS 03\s+\|\s+ALERTAS 02\s+\|\s+SETORES 03/);
+  assert.match(output, /INTEGRIDADE 8\/8\s+\|\s+SÉRIES 06 CICLOS/);
+  assert.match(output, /B2 · Observação \(1 alerta\)/);
+  assert.match(output, /SETOR\s+STATUS\s+OBJ ALERTAS/);
 });
 
 test("observability provides deterministic samples and descriptive statistics", () => {
@@ -188,11 +184,11 @@ test("color is opt-in and adds only fixed ANSI formatting", () => {
 
   assert.doesNotMatch(plainOutput, /\u001b/);
   assert.match(coloredOutput, /^\u001b\[96m╭/);
-  assert.match(coloredOutput, /\u001b\[0m\r?\n\u001b\[1;96m│\s+✦  Z I O N/);
+  assert.match(coloredOutput, /\u001b\[0m\r?\n\u001b\[1;96m│\s+Zion \| Painel do cenário/);
   assert.equal(normalizedColorOutput, plainOutput);
 });
 
-test("dashboard headings and safety notices are centered in the panel", () => {
+test("dashboard keeps its title and subtitle centered in the panel", () => {
   const output = renderDashboard();
   const panelLines = output
     .split("\n")
@@ -200,10 +196,8 @@ test("dashboard headings and safety notices are centered in the panel", () => {
     .map((line) => line.slice(2, -2));
 
   for (const text of [
-    "✦  Z I O N   /   CENTRO DE CONSCIÊNCIA ESPACIAL  ✦",
-    "NÚCLEO DEMONSTRATIVO  •  SISTEMA ISOLADO",
-    "MAPA DE SETORES / SEM ESCALA",
-    "✧  DADOS FICTÍCIOS  •  APENAS LEITURA  ✧",
+    "Zion | Painel do cenário",
+    "Cenário fictício · local · apenas leitura",
   ]) {
     const line = panelLines.find((candidate) => candidate.includes(text));
     assert.ok(line, `expected panel line containing: ${text}`);
@@ -220,9 +214,9 @@ test("dashboard adapts its panel width to terminal size", () => {
     const output = renderDashboard(false, columns);
     const widths = output.split("\n").map((line) => line.length);
 
-    assert.equal(Math.max(...widths), Math.max(56, Math.min(104, columns)));
-    assert.match(output, /DADOS FICTÍCIOS/);
-    assert.match(output, /Z I O N/);
+    assert.equal(Math.max(...widths), Math.max(56, Math.min(68, columns)));
+    assert.match(output, /Cenário fictício/);
+    assert.match(output, /Zion \| Painel do cenário/);
   }
 });
 

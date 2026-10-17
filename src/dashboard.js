@@ -327,63 +327,44 @@ export function renderDashboard(useColor = false, terminalColumns = 80) {
   const safeColumns = Number.isFinite(terminalColumns)
     ? Math.floor(terminalColumns)
     : 80;
-  const width = Math.max(52, Math.min(100, safeColumns - 4));
-  const mapLines =
-    width < 68
-      ? [
-          "╭──── MAPA DE SETORES / SEM ESCALA ────╮",
-          "                    · ✦ ·",
-          "             [A1] -- (ZION) -- [C3]",
-          "                    · [B2] ·",
-        ]
-      : [
-          "╭─────────────── MAPA DE SETORES / SEM ESCALA ───────────────╮",
-          "                         ·  ✦  ·",
-          "                    ·     \\ | /     ·",
-          "         [A1] ════════ ◉ ZION ◉ ════════ [C3]",
-          "                    ·     / | \\     ·",
-          "                         · [B2] ·",
-        ];
+  const width = Math.max(52, Math.min(64, safeColumns - 4));
+  const sectorRows = snapshot.sectors.map((sector) => {
+    const objectCount = snapshot.objects.filter(
+      (object) => object.sectorId === sector.id,
+    ).length;
+    const alertCount = snapshot.alerts.filter(
+      (alert) => alert.sectorId === sector.id,
+    ).length;
+    const name = `${sector.id} ${sector.name}`.padEnd(18);
+    return `${name} ${sector.status.padEnd(12)} ${String(objectCount).padStart(3)} ${String(alertCount).padStart(6)}`;
+  });
+  const observedSector = snapshot.sectors.find(({ status }) => status === "OBSERVAÇÃO");
+  const observedAlertCount = snapshot.alerts.filter(
+    ({ sectorId }) => sectorId === observedSector?.id,
+  ).length;
   const lines = [
-    "✦  Z I O N   /   CENTRO DE CONSCIÊNCIA ESPACIAL  ✦",
-    "NÚCLEO DEMONSTRATIVO  •  SISTEMA ISOLADO",
-    "SEM TELEMETRIA  •  SEM CONEXÕES EXTERNAS",
+    "Zion | Painel do cenário",
+    "Cenário fictício · local · apenas leitura",
     "",
-    ...mapLines,
+    "RESUMO",
+    `OBJETOS ${String(snapshot.objects.length).padStart(2, "0")}  |  ALERTAS ${String(snapshot.alerts.length).padStart(2, "0")}  |  SETORES ${String(snapshot.sectors.length).padStart(2, "0")}`,
+    `INTEGRIDADE ${analysis.passed}/${analysis.total}  |  SÉRIES ${String(observability.cycles.length).padStart(2, "0")} CICLOS`,
     "",
-    `OBSERVABILIDADE  ${String(observability.cycles.length).padStart(2, "0")} CICLOS  •  03 SÉRIES DIDÁTICAS`,
-    ...snapshot.sectors.map((sector) => {
-      const objectCount = snapshot.objects.filter(
-        (object) => object.sectorId === sector.id,
-      ).length;
-      return `[${sector.id}] ${sector.name.padEnd(17)} ${sector.status.padEnd(12)} ${objectCount} OBJ`;
-    }),
+    "SETORES",
+    "SETOR              STATUS       OBJ ALERTAS",
+    ...sectorRows,
     "",
-    ...(width < 72
-      ? [
-          `OBJETOS ${String(snapshot.objects.length).padStart(2, "0")}   |   ALERTAS ${String(snapshot.alerts.length).padStart(2, "0")}`,
-          `SETORES ${String(snapshot.sectors.length).padStart(2, "0")}   |   INTEGRIDADE ${analysis.passed}/${analysis.total}`,
-        ]
-      : [
-          `OBJETOS ${String(snapshot.objects.length).padStart(2, "0")}   |   ALERTAS ${String(snapshot.alerts.length).padStart(2, "0")}   |   SETORES ${String(snapshot.sectors.length).padStart(2, "0")}`,
-        ]),
-    `INTEGRIDADE LOCAL  [${"#".repeat(analysis.passed)}]  ${analysis.passed}/${analysis.total}`,
+    observedSector
+      ? `FOCO: ${observedSector.id} · Observação (${observedAlertCount} alerta${observedAlertCount === 1 ? "" : "s"})`
+      : "FOCO: Nenhum setor em observação",
     "",
-    "✧  DADOS FICTÍCIOS  •  APENAS LEITURA  ✧",
-    "SEM AÇÕES EXTERNAS  •  ANÁLISES NÃO INDICAM RISCO REAL",
+    "Sem telemetria ou ações externas.",
   ];
 
-  const centerLines = lines.flatMap((line, index) =>
-    line !== "" && !/^\[(?:A1|B2|C3)\]/.test(line) ? [index] : [],
-  );
-  const coreLine = lines.findIndex((line) => line.includes("ZION"));
-  const safetyBadgeLine = lines.findIndex((line) => line.startsWith("✧"));
   return frame(lines, useColor, {
     width,
-    centerLines,
-    accentLines: [coreLine],
-    statusLines: [safetyBadgeLine],
-    secondaryLines: [1, 2, 5],
+    centerLines: [0, 1],
+    secondaryLines: [1, 3, 7, lines.length - 2, lines.length - 1],
   });
 }
 

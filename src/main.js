@@ -40,9 +40,9 @@ const views = new Map([
 ]);
 
 const menu =
-  "\n[1] Objetos  [2] Alertas  [3] Integridade  [4] Setores\n" +
-  "[5] Resumo de alertas  [6] Segurança  [7] Séries  [8] Leitura guiada\n" +
-  "[9] Registro de sessão  [q] Sair";
+  "\n[1] Objetos  [2] Alertas  [3] Setores\n" +
+  "[4] Integridade  [5] Resumo  [6] Segurança\n" +
+  "[7] Séries  [8] Guia  [9] Sessão  [q] Sair";
 
 async function readAnswer(prompt) {
   process.stdout.write(prompt);
@@ -56,7 +56,7 @@ try {
 
   while (running) {
     console.log(renderDashboard(useColor, process.stdout.columns ?? 80));
-    console.log(useColor ? `\u001b[96m${menu}\u001b[0m` : menu);
+    console.log(menu);
     const answer = await readAnswer("zion> ");
     if (answer === null) {
       sessionLog.record("INPUT_ENDED");
