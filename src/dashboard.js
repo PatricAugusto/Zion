@@ -21,14 +21,20 @@ const snapshot = {
     {
       id: "EVT-01",
       sectorId: null,
-      level: "INFO",
-      message: "Cenário demonstrativo carregado com dados fictícios.",
+      level: "NORMAL",
+      message: "Cenário fictício carregado; nenhum acompanhamento adicional indicado.",
     },
     {
       id: "EVT-02",
       sectorId: "B2",
-      level: "AVISO",
-      message: "Setor B2 marcado para observação no cenário simulado.",
+      level: "ATENÇÃO",
+      message: "Setor B2 requer revisão dos dados no exercício demonstrativo.",
+    },
+    {
+      id: "EVT-03",
+      sectorId: "B2",
+      level: "CRÍTICO",
+      message: "Inconsistência crítica simulada; revisar o cenário imediatamente.",
     },
   ],
 };
@@ -54,7 +60,8 @@ const OBJECT_PROFILES = new Set([
   "SENSOR",
   "SUPORTE",
 ]);
-const ALERT_LEVELS = new Set(["INFO", "AVISO"]);
+const ALERT_LEVELS = new Set(["NORMAL", "ATENÇÃO", "CRÍTICO"]);
+const ALERT_LEVEL_ORDER = ["CRÍTICO", "ATENÇÃO", "NORMAL"];
 
 function renderTable(head, rows) {
   const table = new Table({
@@ -123,6 +130,7 @@ function frame(lines, useColor = false, options = {}) {
     const padded = `│ ${content} │`;
     if (!useColor) return `| ${content} |`;
     if (index === 0) return colorize(padded, "1;96");
+    if (options.criticalLines?.includes(index)) return colorize(padded, "91");
     if (options.warningLines?.includes(index)) return colorize(padded, "93");
     if (options.accentLines?.includes(index)) return colorize(padded, "95");
     if (options.statusLines?.includes(index)) return colorize(padded, "92");
@@ -499,7 +507,7 @@ export function renderDashboard(useColor = false, terminalColumns = 80) {
     observedSector
       ? width < 68
         ? `  ${observedSector.id} · ${observedAlertCount} alerta(s) simulado(s)`
-        : `  ${observedSector.id}  /  ${observedSector.name}   ·   ${observedAlertCount} alerta simulado para revisão`
+        : `  ${observedSector.id}  /  ${observedSector.name}   ·   ${observedAlertCount} alertas simulados para revisão`
       : "  Nenhum setor marcado para observação",
     "",
     width < 68
@@ -562,41 +570,62 @@ export function renderObjects(useColor = false) {
 }
 
 export function renderAlerts(useColor = false) {
+  const levelLabels = {
+    CRÍTICO: "● CRÍTICO",
+    ATENÇÃO: "● ATENÇÃO",
+    NORMAL: "● NORMAL",
+  };
+  const criticalLines = [];
+  const warningLines = [];
+  const statusLines = [];
+  const alertLines = snapshot.alerts.map((alert, index) => {
+    const lineIndex = 3 + index * 2;
+    if (alert.level === "CRÍTICO") criticalLines.push(lineIndex);
+    else if (alert.level === "ATENÇÃO") warningLines.push(lineIndex);
+    else statusLines.push(lineIndex);
+    return `[${alert.id}] ${levelLabels[alert.level]}  ${alert.message}`;
+  });
   const lines = [
     "ALERTAS DO CENÁRIO SIMULADO",
+    "NÍVEIS VISUAIS FICTÍCIOS — NÃO REPRESENTAM RISCO REAL",
     "",
-    ...snapshot.alerts.map(
-      (alert) => `[${alert.id}] [${alert.level}] ${alert.message}`,
-    ),
+    ...alertLines.flatMap((line) => [line, ""]),
+    "LEITURA RÁPIDA: crítico = revisar já · atenção = observar · normal = cenário estável",
     "",
-    "Alertas não representam eventos espaciais reais.",
+    "Exemplos didáticos; não representam eventos ou condições espaciais reais.",
   ];
 
   return frame(lines, useColor, {
-    centerLines: [0, 5],
+    accentLines: [1],
+    criticalLines,
+    warningLines,
+    statusLines,
+    secondaryLines: [1, lines.length - 1],
   });
 }
 
 export function renderAlertAnalysis(useColor = false) {
-  const levels = [...new Set(snapshot.alerts.map(({ level }) => level))];
+  const counts = ALERT_LEVEL_ORDER.map((level) => ({
+    level,
+    count: snapshot.alerts.filter((alert) => alert.level === level).length,
+  }));
   const lines = [
     "RESUMO DE ALERTAS SIMULADOS",
-    "CONTAGENS POR RÓTULO — SEM CLASSIFICAÇÃO DE RISCO REAL",
+    "DISTRIBUIÇÃO DIDÁTICA POR PRIORIDADE VISUAL",
     "",
-    ...levels.map((level) => {
-      const count = snapshot.alerts.filter(
-        (alert) => alert.level === level,
-      ).length;
-      return `[${level}] ${count} registro(s)`;
-    }),
+    ...counts.map(({ level, count }) => `${level.padEnd(9)} ${count} registro(s)`),
     "",
     `TOTAL DE REGISTROS: ${snapshot.alerts.length}`,
-    "Os rótulos são didáticos e não indicam urgência ou ameaça real.",
+    "CRÍTICO e ATENÇÃO são exemplos visuais fictícios, sem ameaça real.",
+    "Use a cor como reforço; o texto mantém o significado sem ANSI.",
   ];
 
   return frame(lines, useColor, {
-    centerLines: [0, 1, 6, 7],
+    centerLines: [0, 1, lines.length - 2, lines.length - 1],
     accentLines: [1],
+    criticalLines: [3],
+    warningLines: [4],
+    statusLines: [5],
   });
 }
 

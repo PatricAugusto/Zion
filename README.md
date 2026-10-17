@@ -21,7 +21,7 @@ princípios de segurança:
 | `2` | Alertas simulados |
 | `3` | Integridade estrutural dos dados fictícios |
 | `4` | Comparativo e contagens por setor |
-| `5` | Resumo dos rótulos dos alertas fictícios |
+| `5` | Resumo das prioridades visuais fictícias |
 | `6` | Princípios e limites de segurança |
 | `7` | Painel minimalista das séries de observabilidade |
 | `8` | Leitura guiada e estatísticas descritivas |
@@ -32,6 +32,10 @@ princípios de segurança:
 A tela de objetos reúne nove registros fictícios com perfil, estado,
 preenchimento e ciclos demonstrativos. Esses valores permitem praticar
 comparações entre itens e setores; não são telemetria nem medições físicas.
+
+As telas `2` e `5` demonstram prioridades visuais fictícias: crítico em
+vermelho, atenção em amarelo e normal em verde. Os rótulos servem para
+demonstrar hierarquia e leitura rápida; não indicam risco ou urgência reais.
 
 Para executar os testes:
 

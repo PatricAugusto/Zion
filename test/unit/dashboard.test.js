@@ -31,9 +31,9 @@ test("dashboard shows all sectors and derives counts from scenario data", () => 
   assert.match(output, /ÓRBITA BAIXA/);
   assert.match(output, /ÓRBITA MÉDIA/);
   assert.match(output, /REGIÃO LUNAR/);
-  assert.match(output, /09\s+objetos\s+02\s+alertas\s+03\s+setores/);
+  assert.match(output, /09\s+objetos\s+03\s+alertas\s+03\s+setores/);
   assert.match(output, /INTEGRIDADE\s+▰+▱*\s+10\/10\s+SÉRIES\s+06 ciclos/);
-  assert.match(output, /B2\s+\/\s+ÓRBITA MÉDIA\s+·\s+1 alerta simulado para revisão/);
+  assert.match(output, /B2\s+\/\s+ÓRBITA MÉDIA\s+·\s+2 alertas simulados para revisão/);
   assert.match(output, /SETOR\s+ESTADO\s+OBJ\s+EVT/);
   assert.match(output, /01\. A1 ÓRBITA BAIXA/);
 });
@@ -139,18 +139,26 @@ test("alert view labels alerts as simulated", () => {
   const output = renderAlerts();
 
   assert.match(output, /ALERTAS DO CENÁRIO SIMULADO/);
-  assert.match(output, /EVT-01.*\[INFO\]/);
-  assert.match(output, /EVT-02.*\[AVISO\]/);
-  assert.match(output, /não representam eventos espaciais reais/);
+  assert.match(output, /NÍVEIS VISUAIS FICTÍCIOS — NÃO REPRESENTAM RISCO REAL/);
+  assert.match(output, /EVT-01.*NORMAL/);
+  assert.match(output, /EVT-02.*ATENÇÃO/);
+  assert.match(output, /EVT-03.*CRÍTICO/);
+  assert.match(output, /crítico = revisar já · atenção = observar · normal = cenário estável/);
+  assert.match(output, /não representam eventos ou condições espaciais reais/);
+  assert.match(renderAlerts(true), /\u001b\[91m.*EVT-03.*CRÍTICO/);
+  assert.match(renderAlerts(true), /\u001b\[93m.*EVT-02.*ATENÇÃO/);
+  assert.match(renderAlerts(true), /\u001b\[92m.*EVT-01.*NORMAL/);
 });
 
 test("alert analysis summarizes synthetic labels without implying real severity", () => {
   const output = renderAlertAnalysis();
 
   assert.match(output, /RESUMO DE ALERTAS SIMULADOS/);
-  assert.match(output, /\[INFO\] 1 registro\(s\)/);
-  assert.match(output, /\[AVISO\] 1 registro\(s\)/);
-  assert.match(output, /não indicam urgência ou ameaça real/);
+  assert.match(output, /CRÍTICO\s+1 registro\(s\)/);
+  assert.match(output, /ATENÇÃO\s+1 registro\(s\)/);
+  assert.match(output, /NORMAL\s+1 registro\(s\)/);
+  assert.match(output, /TOTAL DE REGISTROS: 3/);
+  assert.match(output, /exemplos visuais fictícios, sem ameaça real/);
 });
 
 test("integrity analysis validates local data structure, not space conditions", () => {
@@ -192,7 +200,7 @@ test("color is opt-in and adds only fixed ANSI formatting", () => {
   const plainOutput = renderDashboard();
   const coloredOutput = renderDashboard(true);
   const normalizedColorOutput = coloredOutput
-    .replace(/\u001b\[(?:96|1;96|95|92|93|36|2|0)m/g, "")
+    .replace(/\u001b\[(?:91|96|1;96|95|92|93|36|2|0)m/g, "")
     .split("\n")
     .map((line) => {
       if (/^╭─+╮$/.test(line)) return line.replace(/^╭/, "+").replace(/╮$/, "+").replace(/─/g, "-");
@@ -206,6 +214,13 @@ test("color is opt-in and adds only fixed ANSI formatting", () => {
   assert.match(coloredOutput, /^\u001b\[96m╭/);
   assert.match(coloredOutput, /\u001b\[0m\r?\n\u001b\[1;96m│\s+Z I O N\s+\/\s+CENTRO DE CENÁRIO/);
   assert.equal(normalizedColorOutput, plainOutput);
+
+  const plainAlerts = renderAlerts();
+  const coloredAlerts = renderAlerts(true);
+  assert.doesNotMatch(plainAlerts, /\u001b/);
+  assert.match(coloredAlerts, /\u001b\[91m.*CRÍTICO/);
+  assert.match(coloredAlerts, /\u001b\[93m.*ATENÇÃO/);
+  assert.match(coloredAlerts, /\u001b\[92m.*NORMAL/);
 });
 
 test("dashboard keeps its title and subtitle centered in the panel", () => {
