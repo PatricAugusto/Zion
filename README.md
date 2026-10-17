@@ -35,9 +35,9 @@ comparações entre itens e setores; não são telemetria nem medições física
 
 As telas `2` e `5` demonstram prioridades visuais fictícias: crítico em
 vermelho, atenção em amarelo e normal em verde. Os rótulos servem para
-demonstrar hierarquia e leitura rápida; a tela `2` alinha nível, ID, setor e
-resumo, e a tela `5` apresenta contagens compactas. Não indicam risco ou
-urgência reais.
+demonstrar hierarquia e leitura rápida; a tela `2` mostra somente a prioridade
+e um resumo curto, e a tela `5` apresenta contagens compactas. Não indicam
+risco ou urgência reais.
 
 Para executar os testes:
 

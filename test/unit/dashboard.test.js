@@ -138,20 +138,19 @@ test("object view presents expanded fictional records and comparative attributes
 test("alert view labels alerts as simulated", () => {
   const output = renderAlerts();
 
-  assert.match(output, /ALERTAS DO CENÁRIO SIMULADO/);
-  assert.match(output, /PRIORIDADE VISUAL\s+·\s+FICTÍCIA/);
-  assert.match(output, /NÍVEL\s+ID\s+SETOR\s+RESUMO/);
-  assert.match(output, /CRÍTICO\s+EVT-03\s+B2/);
-  assert.match(output, /ATENÇÃO\s+EVT-02\s+B2/);
-  assert.match(output, /NORMAL\s+EVT-01\s+GERAL/);
-  assert.ok(output.indexOf("EVT-03") < output.indexOf("EVT-02"));
-  assert.ok(output.indexOf("EVT-02") < output.indexOf("EVT-01"));
-  assert.match(output, /CRÍTICO revisar\s+·\s+ATENÇÃO observar\s+·\s+NORMAL estável/);
-  assert.match(output, /Cenário didático; não representa risco ou evento real/);
+  assert.match(output, /ALERTAS\s+·\s+03/);
+  assert.match(output, /PRIORIDADE VISUAL FICTÍCIA/);
+  assert.match(output, /● CRÍTICO\s+·\s+Inconsistência simulada no setor B2/);
+  assert.match(output, /● ATENÇÃO\s+·\s+Revisar dados do setor B2/);
+  assert.match(output, /● NORMAL\s+·\s+Cenário demonstrativo carregado/);
+  assert.ok(output.indexOf("CRÍTICO") < output.indexOf("ATENÇÃO"));
+  assert.ok(output.indexOf("ATENÇÃO") < output.indexOf("NORMAL"));
+  assert.match(output, /Cenário didático; não representa risco real/);
+  assert.doesNotMatch(output, /EVT-0[1-3]|NÍVEL\s+ID\s+SETOR\s+RESUMO/);
   const coloredOutput = renderAlerts(true);
-  assert.match(coloredOutput, /\u001b\[91m.*CRÍTICO.*EVT-03/);
-  assert.match(coloredOutput, /\u001b\[93m.*ATENÇÃO.*EVT-02/);
-  assert.match(coloredOutput, /\u001b\[92m.*NORMAL.*EVT-01/);
+  assert.match(coloredOutput, /\u001b\[91m.*CRÍTICO.*Inconsistência simulada/);
+  assert.match(coloredOutput, /\u001b\[93m.*ATENÇÃO.*Revisar dados/);
+  assert.match(coloredOutput, /\u001b\[92m.*NORMAL.*Cenário demonstrativo/);
 });
 
 test("alert analysis summarizes synthetic labels without implying real severity", () => {

@@ -22,19 +22,19 @@ const snapshot = {
       id: "EVT-01",
       sectorId: null,
       level: "NORMAL",
-      message: "Cenário fictício carregado; nenhum acompanhamento adicional indicado.",
+      message: "Cenário demonstrativo carregado.",
     },
     {
       id: "EVT-02",
       sectorId: "B2",
       level: "ATENÇÃO",
-      message: "Setor B2 requer revisão dos dados no exercício demonstrativo.",
+      message: "Revisar dados do setor B2.",
     },
     {
       id: "EVT-03",
       sectorId: "B2",
       level: "CRÍTICO",
-      message: "Inconsistência crítica simulada; revisar o cenário imediatamente.",
+      message: "Inconsistência simulada no setor B2.",
     },
   ],
 };
@@ -579,32 +579,24 @@ export function renderAlerts(useColor = false) {
     (left, right) =>
       ALERT_LEVEL_ORDER.indexOf(left.level) - ALERT_LEVEL_ORDER.indexOf(right.level),
   );
-  const alertTable = renderTable(
-    ["NÍVEL", "ID", "SETOR", "RESUMO"],
-    orderedAlerts.map((alert) => [
-      levelLabels[alert.level],
-      alert.id,
-      alert.sectorId ?? "GERAL",
-      alert.message,
-    ]),
-  );
   const criticalLines = [];
   const warningLines = [];
   const statusLines = [];
   orderedAlerts.forEach((alert, index) => {
-    const lineIndex = 4 + index;
+    const lineIndex = 3 + index;
     if (alert.level === "CRÍTICO") criticalLines.push(lineIndex);
     else if (alert.level === "ATENÇÃO") warningLines.push(lineIndex);
     else statusLines.push(lineIndex);
   });
   const lines = [
-    "ALERTAS DO CENÁRIO SIMULADO",
-    "PRIORIDADE VISUAL  ·  FICTÍCIA",
+    `ALERTAS  ·  ${String(orderedAlerts.length).padStart(2, "0")}`,
+    "PRIORIDADE VISUAL FICTÍCIA",
     "",
-    ...alertTable,
+    ...orderedAlerts.map(
+      (alert) => `${levelLabels[alert.level]}  ·  ${alert.message}`,
+    ),
     "",
-    "CRÍTICO revisar  ·  ATENÇÃO observar  ·  NORMAL estável",
-    "Cenário didático; não representa risco ou evento real.",
+    "Cenário didático; não representa risco real.",
   ];
 
   return frame(lines, useColor, {
