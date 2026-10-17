@@ -47,6 +47,12 @@ npm run test:integration
 npm run test:security
 ```
 
+Os testes unitários de autenticação verificam limites e normalização de
+identificadores, hash de senha, rejeição genérica, bloqueio e desbloqueio de
+contas, provisionamento exclusivo do Creator e validação dos eventos de
+auditoria. Os testes de integração complementam essa cobertura exercitando o
+SQLite real e as transações.
+
 O `npm test` preserva o relatório detalhado do Node.js e acrescenta um painel
 com totais, taxa de aprovação, duração e resultados por grupo. A suíte também
 limita a sessão local após 10 entradas inválidas consecutivas; uma opção de
